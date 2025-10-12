@@ -6,6 +6,7 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR}/lamina)
 
 # add sub directory
 add_subdirectory(interpreter)
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -160,7 +161,7 @@ else()
 endif()
 
 # Create main executable
-add_executable(Lamina 
+add_executable(lamina 
     interpreter/main.cpp 
     interpreter/utils/repl_input.hpp
     interpreter/utils/repl_input.cpp
