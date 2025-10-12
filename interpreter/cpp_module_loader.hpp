@@ -39,9 +39,10 @@
 
 #ifndef _WIN32
 #include <dlfcn.h>
-#include <elf.h>
+
 // 新增：区分 Linux 和 macOS 头文件
 #if defined(__linux__)
+#include <elf.h>
 #include <link.h>  // Linux 保留
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>  // macOS 用 Mach-O 相关头文件替代
@@ -99,23 +100,7 @@ inline std::vector<std::string> get_win_dylib_symbols(DYLIB_HANDLE hModule) {
 }
 #endif
 
-#ifndef _WIN32
-#include <dlfcn.h>
-#include <cstdint>
-// 1. 按平台区分头文件和依赖（Linux=ELF，macOS=Mach-O）
-#if defined(__linux__)
-// Linux 专属：ELF 动态库解析依赖
-#include <elf.h>
-#include <link.h>
-#elif defined(__APPLE__)
-// macOS 专属：Mach-O 动态库解析依赖（替换 Linux 的 elf.h/link.h）
-#include <mach-o/dyld.h>
-#include <mach-o/nlist.h>    // Mach-O 符号表结构（nlist_t）
-#include <mach-o/loader.h>   // Mach-O 加载命令结构（如 LC_SYMTAB）
-#include <string.h>
-#endif
 
-// 2. 跨平台符号解析：对外统一接口（隐藏底层差异）
 std::vector<std::string> get_dylib_symbols(const std::string& lib_path);
 
 // -------------------------- Linux 平台：保留原 ELF 解析逻辑 --------------------------
