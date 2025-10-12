@@ -42,7 +42,7 @@ std::shared_ptr<Node> lmStruct::find(const std::string& key) const {
             return current; // 找到匹配节点
         }
         if (current->hash == hash_parent && current->key == "__parent__") {
-            parent = current;
+            parent = current->value;
         }
         current = current->next;
     }
