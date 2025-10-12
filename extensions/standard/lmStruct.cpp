@@ -46,11 +46,12 @@ std::shared_ptr<Node> lmStruct::find(const std::string& key) const {
         }
         current = current->next;
     }
+    if (!parent.is_lstruct()) return nullptr;
     if (
         auto p = std::get<std::shared_ptr<lmStruct>>(parent.data);
         p != nullptr
     ){
-        p->find(key);
+        return p->find(key);
     }
 
     return nullptr; // 未找到
