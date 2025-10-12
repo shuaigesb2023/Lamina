@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstddef>
+#include <cstdint>  // 新增：用于uintptr_t（32位地址转换需用）  // 关键修复1
 #include <cstring>  // 用于 strstr/strcmp
 
 // 平台宏适配
@@ -89,7 +90,7 @@ inline std::vector<std::string> get_win_dylib_symbols(DYLIB_HANDLE hModule) {
 #endif
 
 #ifndef _WIN32
-// Linux/macOS：获取动态库的所有导出符号名（回调函数）
+// Linux/macOS：ELF符号解析回调（核心修复区）
 static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* data) {
     std::vector<std::string>* symbols = reinterpret_cast<std::vector<std::string>*>(data);
     if (!symbols) return 1;
@@ -97,41 +98,63 @@ static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* dat
     void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
     if (!handle) return 0;
 
-    // 关键：统一定义ELF类型别名，适配32/64位系统
+    // 修复2：统一定义ELF类型 + 适配32/64位宏
 #if defined(__x86_64__) || defined(_LP64)
-    using Elf_Phdr = Elf64_Phdr;   // 64位系统对应Elf64_Phdr
-    using Elf_Dyn = Elf64_Dyn;     // 64位系统对应Elf64_Dyn
-    using Elf_Sym = Elf64_Sym;     // 64位系统对应Elf64_Sym
-    using Elf_Word = Elf64_Word;   // 64位系统对应Elf64_Word
+    using Elf_Phdr = Elf64_Phdr;
+    using Elf_Dyn = Elf64_Dyn;
+    using Elf_Sym = Elf64_Sym;
+    using Elf_Word = Elf64_Word;
+    #define ELF_ST_BIND ELF64_ST_BIND  // 64位用ELF64宏
+    #define ELF_ST_TYPE ELF64_ST_TYPE
 #else
-    using Elf_Phdr = Elf32_Phdr;   // 32位系统对应Elf32_Phdr
-    using Elf_Dyn = Elf32_Dyn;     // 32位系统对应Elf32_Dyn
-    using Elf_Sym = Elf32_Sym;     // 32位系统对应Elf32_Sym
-    using Elf_Word = Elf32_Word;   // 32位系统对应Elf32_Word
+    using Elf_Phdr = Elf32_Phdr;
+    using Elf_Dyn = Elf32_Dyn;
+    using Elf_Sym = Elf32_Sym;
+    using Elf_Word = Elf32_Word;
+    #define ELF_ST_BIND ELF32_ST_BIND  // 32位用ELF32宏
+    #define ELF_ST_TYPE ELF32_ST_TYPE
 #endif
 
-    // 遍历ELF段：使用通用别名Elf_Phdr，不再硬编码Elf64_Phdr
+    // 遍历ELF段（外层循环变量i保留）
     for (int i = 0; i < info->dlpi_phnum; ++i) {
-        const Elf_Phdr* phdr = &info->dlpi_phdr[i]; // 类型匹配，无编译错误
+        const Elf_Phdr* phdr = &info->dlpi_phdr[i];
         if (phdr->p_type != PT_DYNAMIC) continue;
 
-        // 解析动态符号表：使用通用别名Elf_Dyn
+        // 修复3：32/64位动态段地址解析（区分d_val/d_ptr）
         Elf_Dyn* dyn = reinterpret_cast<Elf_Dyn*>(info->dlpi_addr + phdr->p_vaddr);
-        Elf_Sym* symtab = nullptr;  // 通用别名Elf_Sym
+        Elf_Sym* symtab = nullptr;
         const char* strtab = nullptr;
-        Elf_Word symcount = 0;      // 通用别名Elf_Word
+        Elf_Word symcount = 0;
 
         for (; dyn->d_tag != DT_NULL; ++dyn) {
             switch (dyn->d_tag) {
-                case DT_SYMTAB: symtab = reinterpret_cast<Elf_Sym*>(dyn->d_un.d_ptr); break;
-                case DT_STRTAB: strtab = reinterpret_cast<const char*>(dyn->d_un.d_ptr); break;
-                case DT_SYMENT: symcount = phdr->p_memsz / sizeof(Elf_Sym); break;
+                case DT_SYMTAB: 
+                    // 64位用d_ptr，32位用d_val（转成uintptr_t再强转指针）
+#if defined(__x86_64__) || defined(_LP64)
+                    symtab = reinterpret_cast<Elf_Sym*>(dyn->d_un.d_ptr);
+#else
+                    symtab = reinterpret_cast<Elf_Sym*>(static_cast<uintptr_t>(dyn->d_un.d_val));
+#endif
+                    break;
+                case DT_STRTAB: 
+#if defined(__x86_64__) || defined(_LP64)
+                    strtab = reinterpret_cast<const char*>(dyn->d_un.d_ptr);
+#else
+                    strtab = reinterpret_cast<const char*>(static_cast<uintptr_t>(dyn->d_un.d_val));
+#endif
+                    break;
+                case DT_SYMENT: 
+                    symcount = phdr->p_memsz / sizeof(Elf_Sym);
+                    break;
             }
         }
 
-        // 遍历符号表：使用通用别名Elf_Sym
-        for (Elf_Word i = 0; i < symcount; ++i) {
-            const Elf_Sym* sym = &symtab[i];
+        if (!symtab || !strtab || symcount == 0) continue;
+
+        // 修复4：内层循环变量改为j，避免与外层i重复
+        for (Elf_Word j = 0; j < symcount; ++j) {
+            const Elf_Sym* sym = &symtab[j];
+            // 用适配后的ELF_ST_BIND/ELF_ST_TYPE宏，不再报错
             if (ELF_ST_BIND(sym->st_info) != STB_GLOBAL || 
                 ELF_ST_TYPE(sym->st_info) == STT_DEBUG || 
                 sym->st_name == 0) {
@@ -143,14 +166,17 @@ static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* dat
         }
     }
 
+    // 修复5：删除宏定义（避免污染其他代码）
+#undef ELF_ST_BIND
+#undef ELF_ST_TYPE
+
     dlclose(handle);
     return 0;
 }
 
-// Linux/macOS：触发符号表遍历，返回所有导出符号名
+// Linux/macOS：触发符号遍历（逻辑不变）
 std::vector<std::string> get_elf_dylib_symbols(const std::string& so_path) {
     std::vector<std::string> symbols;
-    // 调用 dl_iterate_phdr，通过回调收集符号
     dl_iterate_phdr(elf_symbol_callback, &symbols);
     return symbols;
 }
