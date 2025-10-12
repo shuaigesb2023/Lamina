@@ -8,6 +8,7 @@
 #include <cstdint>  // 新增：用于uintptr_t（32位地址转换需用）  // 关键修复1
 #include <cstring>  // 用于 strstr/strcmp
 
+
 // 平台宏适配
 #ifdef _WIN32
 #include <windows.h>
@@ -21,10 +22,8 @@
 #define DYLIB_GETSYM(handle, name) reinterpret_cast<void*>(GetProcAddress(handle, name))
 #define DYLIB_UNLOAD(handle) FreeLibrary(handle)
 #define DYLIB_ERROR() GetLastError()
+
 #else
-#include <dlfcn.h>
-#include <link.h>  
-#include <elf.h>
 
 #ifndef STT_DEBUG
 #define STT_DEBUG 0x11
@@ -35,6 +34,17 @@
 #define DYLIB_GETSYM(handle, name) dlsym(handle, name)
 #define DYLIB_UNLOAD(handle) dlclose(handle)
 #define DYLIB_ERROR() dlerror()
+
+#endif
+
+#ifndef _WIN32
+#include <dlfcn.h>
+#include <elf.h>
+// 新增：区分 Linux 和 macOS 头文件
+#if defined(__linux__)
+#include <link.h>  // Linux 保留
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>  // macOS 用 Mach-O 相关头文件替代
 #endif
 
 // 目标函数指针类型
@@ -90,46 +100,68 @@ inline std::vector<std::string> get_win_dylib_symbols(DYLIB_HANDLE hModule) {
 #endif
 
 #ifndef _WIN32
-// Linux/macOS：ELF符号解析回调（核心修复区）
+#include <dlfcn.h>
+#include <cstdint>
+// 1. 按平台区分头文件和依赖（Linux=ELF，macOS=Mach-O）
+#if defined(__linux__)
+// Linux 专属：ELF 动态库解析依赖
+#include <elf.h>
+#include <link.h>
+#elif defined(__APPLE__)
+// macOS 专属：Mach-O 动态库解析依赖（替换 Linux 的 elf.h/link.h）
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>    // Mach-O 符号表结构（nlist_t）
+#include <mach-o/loader.h>   // Mach-O 加载命令结构（如 LC_SYMTAB）
+#include <string.h>
+#endif
+
+// 2. 跨平台符号解析：对外统一接口（隐藏底层差异）
+std::vector<std::string> get_dylib_symbols(const std::string& lib_path);
+
+// -------------------------- Linux 平台：保留原 ELF 解析逻辑 --------------------------
+#if defined(__linux__)
+// Linux：ELF 符号解析回调（复用你之前修复后的逻辑）
 static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* data) {
     std::vector<std::string>* symbols = reinterpret_cast<std::vector<std::string>*>(data);
-    if (!symbols) return 1;
+    if (!symbols || info->dlpi_name == nullptr) return 1;
+
+    // 只处理目标动态库（避免遍历所有系统库）
+    if (std::string(info->dlpi_name) != lib_path) return 0;
 
     void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
     if (!handle) return 0;
 
-    // 修复2：统一定义ELF类型 + 适配32/64位宏
+    // ELF 类型适配（32/64位）
 #if defined(__x86_64__) || defined(_LP64)
     using Elf_Phdr = Elf64_Phdr;
     using Elf_Dyn = Elf64_Dyn;
     using Elf_Sym = Elf64_Sym;
     using Elf_Word = Elf64_Word;
-    #define ELF_ST_BIND ELF64_ST_BIND  // 64位用ELF64宏
+    #define ELF_ST_BIND ELF64_ST_BIND
     #define ELF_ST_TYPE ELF64_ST_TYPE
 #else
     using Elf_Phdr = Elf32_Phdr;
     using Elf_Dyn = Elf32_Dyn;
     using Elf_Sym = Elf32_Sym;
     using Elf_Word = Elf32_Word;
-    #define ELF_ST_BIND ELF32_ST_BIND  // 32位用ELF32宏
+    #define ELF_ST_BIND ELF32_ST_BIND
     #define ELF_ST_TYPE ELF32_ST_TYPE
 #endif
 
-    // 遍历ELF段（外层循环变量i保留）
+    // 遍历 ELF 动态段（PT_DYNAMIC）
     for (int i = 0; i < info->dlpi_phnum; ++i) {
         const Elf_Phdr* phdr = &info->dlpi_phdr[i];
         if (phdr->p_type != PT_DYNAMIC) continue;
 
-        // 修复3：32/64位动态段地址解析（区分d_val/d_ptr）
         Elf_Dyn* dyn = reinterpret_cast<Elf_Dyn*>(info->dlpi_addr + phdr->p_vaddr);
         Elf_Sym* symtab = nullptr;
         const char* strtab = nullptr;
         Elf_Word symcount = 0;
 
+        // 提取符号表/字符串表地址
         for (; dyn->d_tag != DT_NULL; ++dyn) {
             switch (dyn->d_tag) {
                 case DT_SYMTAB: 
-                    // 64位用d_ptr，32位用d_val（转成uintptr_t再强转指针）
 #if defined(__x86_64__) || defined(_LP64)
                     symtab = reinterpret_cast<Elf_Sym*>(dyn->d_un.d_ptr);
 #else
@@ -151,10 +183,9 @@ static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* dat
 
         if (!symtab || !strtab || symcount == 0) continue;
 
-        // 修复4：内层循环变量改为j，避免与外层i重复
+        // 筛选全局非调试符号
         for (Elf_Word j = 0; j < symcount; ++j) {
             const Elf_Sym* sym = &symtab[j];
-            // 用适配后的ELF_ST_BIND/ELF_ST_TYPE宏，不再报错
             if (ELF_ST_BIND(sym->st_info) != STB_GLOBAL || 
                 ELF_ST_TYPE(sym->st_info) == STT_DEBUG || 
                 sym->st_name == 0) {
@@ -166,22 +197,113 @@ static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* dat
         }
     }
 
-    // 修复5：删除宏定义（避免污染其他代码）
-#undef ELF_ST_BIND
-#undef ELF_ST_TYPE
-
+    #undef ELF_ST_BIND
+    #undef ELF_ST_TYPE
     dlclose(handle);
     return 0;
 }
 
-// Linux/macOS：触发符号遍历（逻辑不变）
-std::vector<std::string> get_elf_dylib_symbols(const std::string& so_path) {
+// Linux：对外实现统一接口（调用 ELF 解析）
+std::vector<std::string> get_dylib_symbols(const std::string& lib_path) {
     std::vector<std::string> symbols;
+    // 遍历进程中已加载的 ELF 动态库，触发回调
     dl_iterate_phdr(elf_symbol_callback, &symbols);
+    return symbols;
+}
+
+// -------------------------- macOS 平台：新增 Mach-O 解析逻辑 --------------------------
+#elif defined(__APPLE__)
+// macOS：全局变量（传递目标库路径和符号结果，适配 _dyld_iterate_imagees 回调）
+static std::string s_target_lib_path;
+static std::vector<std::string>* s_macho_symbols = nullptr;
+
+// macOS：Mach-O 镜像遍历回调（替换 Linux 的 elf_symbol_callback）
+static bool macho_image_callback(const struct mach_header* mh, uintptr_t vmaddr_slide, 
+                                 const char* image_path, void* data) {
+    // 1. 只处理目标动态库（跳过系统库和不匹配的库）
+    if (!image_path || std::string(image_path) != s_target_lib_path) {
+        return false; // 返回 false 继续遍历其他镜像
+    }
+
+    // 2. 打开目标动态库（获取可读写权限，用于解析符号表）
+    void* handle = dlopen(image_path, RTLD_LAZY | RTLD_LOCAL);
+    if (!handle) {
+        std::cerr << "macOS dlopen failed: " << dlerror() << std::endl;
+        return false;
+    }
+
+    // 3. 解析 Mach-O 加载命令，找到符号表（LC_SYMTAB）和字符串表
+    const struct mach_header_64* mh64 = reinterpret_cast<const struct mach_header_64*>(mh);
+    const struct load_command* lc = reinterpret_cast<const struct load_command*>(
+        reinterpret_cast<const uint8_t*>(mh64) + sizeof(struct mach_header_64)
+    );
+    struct symtab_command* symtab_cmd = nullptr;
+
+    // 遍历加载命令，找到符号表命令（LC_SYMTAB）
+    for (uint32_t i = 0; i < mh64->ncmds; ++i) {
+        if (lc->cmd == LC_SYMTAB) {
+            symtab_cmd = reinterpret_cast<struct symtab_command*>(const_cast<struct load_command*>(lc));
+            break;
+        }
+        // 跳到下一个加载命令
+        lc = reinterpret_cast<const struct load_command*>(
+            reinterpret_cast<const uint8_t*>(lc) + lc->cmdsize
+        );
+    }
+
+    if (!symtab_cmd) {
+        dlclose(handle);
+        return false; // 无符号表，跳过
+    }
+
+    // 4. 提取符号表（nlist_t）和字符串表地址（需加上 ASLR 偏移 vmaddr_slide）
+    const struct nlist_64* symtab = reinterpret_cast<const struct nlist_64*>(
+        vmaddr_slide + symtab_cmd->symoff
+    );
+    const char* strtab = reinterpret_cast<const char*>(
+        vmaddr_slide + symtab_cmd->stroff
+    );
+    const uint32_t symcount = symtab_cmd->nsyms;
+
+    // 5. 筛选 Mach-O 符号（逻辑与 Linux 对齐：全局符号、非调试、非内部符号）
+    for (uint32_t j = 0; j < symcount; ++j) {
+        const struct nlist_64* sym = &symtab[j];
+        // 条件：① 有符号名 ② 全局符号（N_EXT=1 + N_TYPE=N_UNDF/N_SECT/N_DATA 等）③ 非调试符号
+        if (sym->n_un.n_strx == 0 || !(sym->n_type & N_EXT) || (sym->n_type & N_STAB)) {
+            continue;
+        }
+        const char* sym_name = strtab + sym->n_un.n_strx;
+        // 排除 Mach-O 内部符号（如 __mh_、_dyld_ 开头）
+        if (strstr(sym_name, "__mh_") || strstr(sym_name, "_dyld_")) {
+            continue;
+        }
+        s_macho_symbols->emplace_back(sym_name);
+    }
+
+    dlclose(handle);
+    return true; // 找到目标库，返回 true 停止遍历
+}
+
+// macOS：对外实现统一接口（调用 Mach-O 解析）
+std::vector<std::string> get_dylib_symbols(const std::string& lib_path) {
+    std::vector<std::string> symbols;
+    // 初始化全局变量（传递参数给回调）
+    s_target_lib_path = lib_path;
+    s_macho_symbols = &symbols;
+
+    // 遍历 macOS 进程中已加载的 Mach-O 镜像，触发回调
+    _dyld_iterate_imagees(macho_image_callback, nullptr);
+
+    // 清空全局变量（避免污染）
+    s_target_lib_path.clear();
+    s_macho_symbols = nullptr;
     return symbols;
 }
 #endif
 
+// -------------------------- 原代码中调用符号解析的地方：替换为统一接口 --------------------------
+// （在 load_cppmodule 函数中，将原来的 get_elf_dylib_symbols 改为 get_dylib_symbols）
+#endif
 
 inline std::unordered_map<std::string, Value> load_cppmodule(const std::string& path) {
     std::unordered_map<std::string, Value> result;
@@ -199,7 +321,7 @@ inline std::unordered_map<std::string, Value> load_cppmodule(const std::string& 
 #ifdef _WIN32
     all_symbols = get_win_dylib_symbols(handle);
 #else
-    all_symbols = get_elf_dylib_symbols(path);
+    all_symbols = get_dylib_symbols(path); // 替换原来的 get_elf_dylib_symbols
 #endif
     if (all_symbols.empty()) {
         std::cerr << "No exported symbols found in module" << std::endl;
