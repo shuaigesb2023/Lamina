@@ -92,60 +92,59 @@ inline std::vector<std::string> get_win_dylib_symbols(DYLIB_HANDLE hModule) {
 // Linux/macOS：获取动态库的所有导出符号名（回调函数）
 static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* data) {
     std::vector<std::string>* symbols = reinterpret_cast<std::vector<std::string>*>(data);
-    if (!symbols) return 1;  // 终止遍历
+    if (!symbols) return 1;
 
-    // 打开当前模块的符号表（RTLD_NOLOAD：不重复加载）
     void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
-    if (!handle) return 0;  // 跳过非目标模块
+    if (!handle) return 0;
 
-    // 修复：根据ELF位数选择Phdr类型
+    // 关键：统一定义ELF类型别名，适配32/64位系统
 #if defined(__x86_64__) || defined(_LP64)
-    using Elf_Phdr = Elf64_Phdr; // 64位系统使用Elf64_Phdr
+    using Elf_Phdr = Elf64_Phdr;   // 64位系统对应Elf64_Phdr
+    using Elf_Dyn = Elf64_Dyn;     // 64位系统对应Elf64_Dyn
+    using Elf_Sym = Elf64_Sym;     // 64位系统对应Elf64_Sym
+    using Elf_Word = Elf64_Word;   // 64位系统对应Elf64_Word
 #else
-    using Elf_Phdr = Elf32_Phdr; // 32位系统使用Elf32_Phdr
+    using Elf_Phdr = Elf32_Phdr;   // 32位系统对应Elf32_Phdr
+    using Elf_Dyn = Elf32_Dyn;     // 32位系统对应Elf32_Dyn
+    using Elf_Sym = Elf32_Sym;     // 32位系统对应Elf32_Sym
+    using Elf_Word = Elf32_Word;   // 32位系统对应Elf32_Word
 #endif
 
-    // 遍历 ELF 段（寻找 .dynsym 动态符号表）
+    // 遍历ELF段：使用通用别名Elf_Phdr，不再硬编码Elf64_Phdr
     for (int i = 0; i < info->dlpi_phnum; ++i) {
-        const Elf64_Phdr* phdr = &info->dlpi_phdr[i];
-        // 仅处理动态符号表段（PT_DYNAMIC）
+        const Elf_Phdr* phdr = &info->dlpi_phdr[i]; // 类型匹配，无编译错误
         if (phdr->p_type != PT_DYNAMIC) continue;
 
-        // 解析动态符号表（Elf64_Dyn：动态段条目）
-        Elf64_Dyn* dyn = reinterpret_cast<Elf64_Dyn*>(info->dlpi_addr + phdr->p_vaddr);
-        Elf64_Sym* symtab = nullptr;  // 符号表基地址
-        const char* strtab = nullptr; // 字符串表基地址
-        Elf64_Word symcount = 0;      // 符号数量
+        // 解析动态符号表：使用通用别名Elf_Dyn
+        Elf_Dyn* dyn = reinterpret_cast<Elf_Dyn*>(info->dlpi_addr + phdr->p_vaddr);
+        Elf_Sym* symtab = nullptr;  // 通用别名Elf_Sym
+        const char* strtab = nullptr;
+        Elf_Word symcount = 0;      // 通用别名Elf_Word
 
-        // 遍历动态段，提取符号表/字符串表信息
         for (; dyn->d_tag != DT_NULL; ++dyn) {
             switch (dyn->d_tag) {
-                case DT_SYMTAB: symtab = reinterpret_cast<Elf64_Sym*>(dyn->d_un.d_ptr); break;
+                case DT_SYMTAB: symtab = reinterpret_cast<Elf_Sym*>(dyn->d_un.d_ptr); break;
                 case DT_STRTAB: strtab = reinterpret_cast<const char*>(dyn->d_un.d_ptr); break;
-                case DT_SYMENT: symcount = phdr->p_memsz / sizeof(Elf64_Sym); break; // 符号总数
+                case DT_SYMENT: symcount = phdr->p_memsz / sizeof(Elf_Sym); break;
             }
         }
 
-        if (!symtab || !strtab || symcount == 0) continue;
-
-        // 遍历符号表，筛选导出符号（STB_GLOBAL：全局符号，STT_OBJECT/STT_FUNC：变量/函数）
-        for (Elf64_Word i = 0; i < symcount; ++i) {
-            const Elf64_Sym* sym = &symtab[i];
-            // 条件：全局符号 + 有名字 + 非调试符号
-            if (ELF64_ST_BIND(sym->st_info) != STB_GLOBAL || 
-                ELF64_ST_TYPE(sym->st_info) == STT_DEBUG || 
+        // 遍历符号表：使用通用别名Elf_Sym
+        for (Elf_Word i = 0; i < symcount; ++i) {
+            const Elf_Sym* sym = &symtab[i];
+            if (ELF_ST_BIND(sym->st_info) != STB_GLOBAL || 
+                ELF_ST_TYPE(sym->st_info) == STT_DEBUG || 
                 sym->st_name == 0) {
                 continue;
             }
             const char* sym_name = strtab + sym->st_name;
-            // 排除动态库内部符号（如 _init、_fini）
             if (strstr(sym_name, "_init") || strstr(sym_name, "_fini")) continue;
             symbols->emplace_back(sym_name);
         }
     }
 
     dlclose(handle);
-    return 0;  // 继续遍历其他模块
+    return 0;
 }
 
 // Linux/macOS：触发符号表遍历，返回所有导出符号名
