@@ -11,6 +11,12 @@ add_subdirectory(interpreter)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(APPLE)
+    # 指定 macOS 最低部署版本（10.15+ 支持 _dyld_iterate_imagees 且兼容 ARM64）
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version" FORCE)
+    # 确保架构正确（ARM64 或 X86_64）
+    set(CMAKE_OSX_ARCHITECTURES "${ARCH}" CACHE STRING "macOS architecture" FORCE)
+endif()
 
 # Prioritize MSVC on Windows
 if(WIN32)
