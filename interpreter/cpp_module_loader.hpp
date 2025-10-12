@@ -98,6 +98,13 @@ static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* dat
     void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
     if (!handle) return 0;  // 跳过非目标模块
 
+    // 修复：根据ELF位数选择Phdr类型
+#if defined(__x86_64__) || defined(_LP64)
+    using Elf_Phdr = Elf64_Phdr; // 64位系统使用Elf64_Phdr
+#else
+    using Elf_Phdr = Elf32_Phdr; // 32位系统使用Elf32_Phdr
+#endif
+
     // 遍历 ELF 段（寻找 .dynsym 动态符号表）
     for (int i = 0; i < info->dlpi_phnum; ++i) {
         const Elf64_Phdr* phdr = &info->dlpi_phdr[i];
