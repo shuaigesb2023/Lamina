@@ -160,13 +160,15 @@ else()
 endif()
 
 # Create main executable
-add_executable(lamina interpreter/main.cpp interpreter/repl_input.cpp
-               interpreter/module_loader.cpp
-               interpreter/symbolic.cpp
-        interpreter/console_ui.hpp
-        interpreter/console_ui.cpp
-        interpreter/color_style.hpp
-        interpreter/eval.cpp
+add_executable(Lamina 
+    interpreter/main.cpp 
+    interpreter/utils/repl_input.hpp
+    interpreter/utils/repl_input.cpp
+    interpreter/console_ui.hpp
+    interpreter/console_ui.cpp
+    interpreter/utils/color_style.hpp
+    interpreter/utils/color_style.cpp
+    interpreter/eval.cpp
 )
 
 # Add version header
