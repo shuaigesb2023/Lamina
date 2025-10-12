@@ -31,7 +31,9 @@ std::shared_ptr<Node> lmStruct::find(const std::string& key) const {
     if (buckets_.empty()) return nullptr;   // 桶数组未初始化时直接返回
 
     const size_t hash = hash_string(key);
+    const size_t hash_parent = hash_string("__parent__");
     const size_t bucket_idx = getBucketIndex(hash);
+    Value parent;
 
     // 遍历桶内链表查找（先比哈希，再比字符串）
     std::shared_ptr<Node> current = buckets_[bucket_idx];
@@ -39,11 +41,16 @@ std::shared_ptr<Node> lmStruct::find(const std::string& key) const {
         if (current->hash == hash && current->key == key) {
             return current; // 找到匹配节点
         }
+        if (current->hash == hash_parent && current->key == "__parent__") {
+            parent = current;
+        }
         current = current->next;
     }
-
-    if (parent_) {
-        return parent_->find(key);
+    if (
+        auto p = std::get<std::shared_ptr<lmStruct>>(parent.data);
+        p != nullptr
+    ){
+        p->find(key);
     }
 
     return nullptr; // 未找到
@@ -97,10 +104,6 @@ std::vector<std::pair<std::string, Value>> lmStruct::to_vector() const {
 std::string lmStruct::to_string() const {
     std::stringstream ss;
     ss << "{ ";
-
-    if (parent_) {
-        ss << "parent: " << parent_->to_string() << "; ";
-    }
 
     // 统计总节点数
     size_t total_node_count = 0;
@@ -197,7 +200,6 @@ Value new_struct_from(const std::vector<Value>& args) {
 
     // 新对象
     const auto new_obj = std::make_shared<lmStruct>();
-    new_obj->parent_ = original_ptr;
     new_obj->insert("__parent__", Value(original_ptr));
     return {new_obj};
 
