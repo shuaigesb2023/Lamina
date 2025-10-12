@@ -45,10 +45,9 @@
 #include <elf.h>   // ELF 结构定义（Elf_Phdr/Elf_Sym 等）
 #include <link.h>  // ELF 动态库遍历接口（dl_iterate_phdr）
 #elif defined(__APPLE__)
-// macOS 专属：Mach-O 动态库解析依赖（解析 Mach-O 符号表）
-#include <mach-o/dyld.h>    // Mach-O 镜像遍历接口（_dyld_iterate_imagees）
-#include <mach-o/nlist.h>   // Mach-O 符号表结构（nlist_64/nlist）
-#include <mach-o/loader.h>  // Mach-O 加载命令结构（mach_header_64/LC_SYMTAB 等）
+// 新增：验证 __APPLE__ 宏是否被正确定义（未定义则编译报错）
+#if !defined(__APPLE__)
+#error "macOS branch triggered but __APPLE__ macro is not defined! Check compiler/platform configuration."
 #endif
 
 #endif
