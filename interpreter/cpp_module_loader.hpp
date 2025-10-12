@@ -338,6 +338,13 @@ std::vector<std::string> get_dylib_symbols(const std::string& lib_path) {
     s_target_lib_path = lib_path;
     s_macho_symbols = &symbols;
 
+    // 核心修复：手动声明 _dyld_iterate_imagees 原型（C 链接，避免名称修饰）
+    // 函数原型完全匹配 macOS 系统定义，绕过头文件条件编译限制
+    extern "C" int _dyld_iterate_imagees(
+        bool (*callback)(const struct mach_header*, uintptr_t, const char*, void*), 
+        void* data
+    );
+
     // 遍历 macOS 进程中已加载的 Mach-O 镜像，触发回调
     _dyld_iterate_imagees(macho_image_callback, nullptr);
 
