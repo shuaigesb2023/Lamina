@@ -346,7 +346,7 @@ std::vector<std::string> get_dylib_symbols(const std::string& lib_path) {
     );
 
     // 遍历 macOS 进程中已加载的 Mach-O 镜像，触发回调
-    _dyld_iterate_imagees(macho_image_callback, nullptr);
+    _dyld_iterate_images(macho_image_callback, nullptr);
 
     // 清空全局变量，避免污染后续调用
     s_target_lib_path.clear();
