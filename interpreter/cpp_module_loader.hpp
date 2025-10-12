@@ -115,66 +115,66 @@ std::vector<std::string> get_dylib_symbols(const std::string& lib_path);
 // 静态全局变量：传递目标库路径给回调函数（回调无法直接访问 get_dylib_symbols 的局部参数）
 static std::string s_linux_lib_path;
 
-// Linux：ELF 动态库遍历回调（由 dl_iterate_phdr 触发）
-static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* data) {
-    // 从 data 中提取符号结果存储容器
-    std::vector<std::string>* symbols = reinterpret_cast<std::vector<std::string>*>(data);
-    if (!symbols || info->dlpi_name == nullptr) return 1;  // 无效参数，终止遍历
-
-    // 只处理目标动态库（避免遍历系统中所有已加载的 ELF 库）
-    if (std::string(info->dlpi_name) != s_linux_lib_path) return 0;  // 非目标库，继续遍历
-
-    // 打开目标动态库（验证库有效性，不重复加载）
-    void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
-    if (!handle) return 0;  // 打开失败，跳过该库
-
-    // 适配 ELF 32/64 位结构（根据编译环境自动选择类型）
-#if defined(__x86_64__) || defined(_LP64)
-    using Elf_Phdr = Elf64_Phdr;   // 64位 ELF 段头结构
-    using Elf_Dyn = Elf64_Dyn;     // 64位 ELF 动态段条目
-    using Elf_Sym = Elf64_Sym;     // 64位 ELF 符号表结构
-    using Elf_Word = Elf64_Word;   // 64位 ELF 无符号整数类型
-    #define ELF_ST_BIND ELF64_ST_BIND  // 64位符号绑定类型宏（STB_GLOBAL 等）
-    #define ELF_ST_TYPE ELF64_ST_TYPE  // 64位符号类型宏（STT_FUNC/STT_DEBUG 等）
-#else
-    using Elf_Phdr = Elf32_Phdr;   // 32位 ELF 段头结构
-    using Elf_Dyn = Elf32_Dyn;     // 32位 ELF 动态段条目
-    using Elf_Sym = Elf32_Sym;     // 32位 ELF 符号表结构
-    using Elf_Word = Elf32_Word;   // 32位 ELF 无符号整数类型
-    #define ELF_ST_BIND ELF32_ST_BIND  // 32位符号绑定类型宏
-    #define ELF_ST_TYPE ELF32_ST_TYPE  // 32位符号类型宏
+#if __SIZEOF_POINTER__ == 8  // 64位环境：指针8字节
+using Elf_Phdr = Elf64_Phdr;
+using Elf_Dyn = Elf64_Dyn;
+using Elf_Sym = Elf64_Sym;
+using Elf_Word = Elf64_Word;
+#define ELF_ST_BIND ELF64_ST_BIND
+#define ELF_ST_TYPE ELF64_ST_TYPE
+#else  // 32位环境：指针4字节（包括x86_64-linux-gnux32）
+using Elf_Phdr = Elf32_Phdr;
+using Elf_Dyn = Elf32_Dyn;
+using Elf_Sym = Elf32_Sym;
+using Elf_Word = Elf32_Word;
+#define ELF_ST_BIND ELF32_ST_BIND
+#define ELF_ST_TYPE ELF32_ST_TYPE
 #endif
 
-    // 遍历 ELF 段：只处理动态符号表段（PT_DYNAMIC）
+
+// Linux：ELF 动态库遍历回调（由 dl_iterate_phdr 触发）
+static int elf_symbol_callback(struct dl_phdr_info* info, size_t size, void* data) {
+        std::vector<std::string>* symbols = reinterpret_cast<std::vector<std::string>*>(data);
+    if (!symbols || !info->dlpi_name) return 1;
+
+    // 只处理目标动态库
+    if (std::string(info->dlpi_name) != s_linux_lib_path) return 0;
+
+    void* handle = dlopen(info->dlpi_name, RTLD_LAZY | RTLD_NOLOAD);
+    if (!handle) return 0;
+
+    // 遍历 ELF 动态段（PT_DYNAMIC）
     for (int i = 0; i < info->dlpi_phnum; ++i) {
+        // 现在 Elf_Phdr 类型与 info->dlpi_phdr 匹配（32位Elf32_Phdr，64位Elf64_Phdr）
         const Elf_Phdr* phdr = &info->dlpi_phdr[i];
-        if (phdr->p_type != PT_DYNAMIC) continue;  // 跳过非动态段
+        if (phdr->p_type != PT_DYNAMIC) continue;
 
-        // 计算动态段的实际地址（dlpi_addr 是库的加载基址，加上段的虚拟地址）
-        Elf_Dyn* dyn = reinterpret_cast<Elf_Dyn*>(info->dlpi_addr + phdr->p_vaddr);
-        Elf_Sym* symtab = nullptr;  // 符号表基地址
-        const char* strtab = nullptr;// 字符串表基地址（符号名存储在这里）
-        Elf_Word symcount = 0;      // 符号总数
+        // 修复：动态段地址计算（32/64位通用，依赖Elf_Phdr的p_vaddr类型）
+        Elf_Dyn* dyn = reinterpret_cast<Elf_Dyn*>(
+            reinterpret_cast<uintptr_t>(info->dlpi_addr) + phdr->p_vaddr
+        );
+        Elf_Sym* symtab = nullptr;
+        const char* strtab = nullptr;
+        Elf_Word symcount = 0;
 
-        // 遍历动态段条目：提取符号表和字符串表信息
+        // 提取符号表/字符串表（32/64位通过Elf_Dyn的d_un区分）
         for (; dyn->d_tag != DT_NULL; ++dyn) {
             switch (dyn->d_tag) {
-                case DT_SYMTAB:  // 符号表地址
-#if defined(__x86_64__) || defined(_LP64)
+                case DT_SYMTAB:
+#if __SIZEOF_POINTER__ == 8
                     symtab = reinterpret_cast<Elf_Sym*>(dyn->d_un.d_ptr);
 #else
-                    // 32位 ELF 用 d_val（数值）存储地址，需转为指针类型
                     symtab = reinterpret_cast<Elf_Sym*>(static_cast<uintptr_t>(dyn->d_un.d_val));
 #endif
                     break;
-                case DT_STRTAB:  // 字符串表地址
-#if defined(__x86_64__) || defined(_LP64)
+                case DT_STRTAB:
+#if __SIZEOF_POINTER__ == 8
                     strtab = reinterpret_cast<const char*>(dyn->d_un.d_ptr);
 #else
                     strtab = reinterpret_cast<const char*>(static_cast<uintptr_t>(dyn->d_un.d_val));
 #endif
                     break;
-                case DT_SYMENT:  // 每个符号的大小，计算符号总数
+                case DT_SYMENT:
                     symcount = phdr->p_memsz / sizeof(Elf_Sym);
                     break;
             }
