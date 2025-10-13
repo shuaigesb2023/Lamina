@@ -1,4 +1,4 @@
-# <img src="./assets/logo-icon.svg" width="10%"> This is Lamina version 1.2.0 (Release Candidate) （debug) 
+# <img src="./assets/logo-icon.svg" width="10%"> This is Lamina version 1.2.0 (Release Candidate) （debug)  (就差apple平台编译不通过)
 
 <img src="./assets/logo.svg" width="100%">
 
