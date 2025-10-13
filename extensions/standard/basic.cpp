@@ -3,6 +3,7 @@
 
 
 #include <fstream>
+#include <cstdlib>
 
 #include "../../interpreter/lamina_api/lamina.hpp"
 #include "../../interpreter/lamina_api/value.hpp"
