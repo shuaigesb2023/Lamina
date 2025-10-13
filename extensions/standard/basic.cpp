@@ -144,7 +144,7 @@ Value xpcall(const std::vector<Value>& args){
     }
     catch (std::exception& e) {
         return Interpreter::call_function(
-            handle.get(), Value(e.what())
+            handle.get(), {Value(e.what())}
         );
     }
     catch (...) {
