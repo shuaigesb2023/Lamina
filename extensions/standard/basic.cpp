@@ -119,6 +119,18 @@ Value vars(const std::vector<Value>& args) {
     return results;
 }
 
+// 退出程序
+Value exit_(const std::vector<Value>& args){
+    if (args.empty()) return LAMINA_NULL;
+    const auto err_code = std::get<int>(args[0].data);
+    std::exit(err_code);
+    return LAMINA_NULL;
+}
+
+// 错误处理函数
+Value xpcall(const std::vector<Value>& args){
+
+}
 
 Value typeof_(const std::vector<Value>& args) {
     if (args.empty()) {
