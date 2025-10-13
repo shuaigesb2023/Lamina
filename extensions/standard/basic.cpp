@@ -132,7 +132,7 @@ Value exit_(const std::vector<Value>& args){
 // 错误处理函数
 Value xpcall(const std::vector<Value>& args){
     if (args.size() < 2) return LAMINA_NULL;
-    if (!args[0].is_lambda() and !arg[1].is_lambda()) return LAMINA_NULL;
+    if (!args[0].is_lambda() and !args[1].is_lambda()) return LAMINA_NULL;
     const auto func = std::get<std::shared_ptr<LambdaDeclExpr>>(args[0].data);
     const auto handle = std::get<std::shared_ptr<LambdaDeclExpr>>(args[1].data);
     std::vector<Value> new_args = std::vector(args.begin() + 2, args.end());
