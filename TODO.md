@@ -59,22 +59,22 @@
      备注：
 
 ## 内置函数方面
-- [ ] 🟡 exit(n)（未完成）<br>
+- [x] exit(n)（已完成）<br>
      备注：
 
-- [ ] 🟡 eval(code)（未完成）<br>
+- [ ] eval(code)（未完成）<br>
      备注：
 
-- [ ] 🟡 xpcall(fn)（未完成）<br>
+- [x] xpcall(fn)（已完成）<br>
      备注：
 
-- [ ] 🟡 locals()（未完成）<br>
+- [x] locals()（已完成）<br>
      备注：
 
-- [ ] 🟡 globals()（未完成）<br>
+- [x] globals()（已完成）<br>
      备注：
 
-- [ ] 🟡 vars()（未完成）<br>
+- [x] vars()（已完成）<br>
      备注：
 
 - [ ] 🟡 help(key)（未完成）<br>
