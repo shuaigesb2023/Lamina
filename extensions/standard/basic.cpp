@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <cstdlib>
+#include <exception>
 
 #include "../../interpreter/lamina_api/lamina.hpp"
 #include "../../interpreter/lamina_api/value.hpp"
@@ -130,7 +131,26 @@ Value exit_(const std::vector<Value>& args){
 
 // 错误处理函数
 Value xpcall(const std::vector<Value>& args){
-
+    if (args.size() < 2) return LAMINA_NULL;
+    const auto func = std::get<std::shared_ptr<LambdaDeclExpr>>(args[0].data);
+    const auto handle = std::get<std::shared_ptr<LambdaDeclExpr>>(args[1].data);
+    std::vector<Value> new_args = std::vector(args.begin() + 2, args.end());
+    try {
+        Value result;
+        result = Interpreter::call_function(
+            func.get(), new_args
+        );
+        return result;
+    }
+    catch (std::exception& e) {
+        return Interpreter::call_function(
+            handle.get(), Value(e.what())
+        );
+    }
+    catch (...) {
+        return LAMINA_NULL;
+    }
+    return LAMINA_NULL;
 }
 
 Value typeof_(const std::vector<Value>& args) {
