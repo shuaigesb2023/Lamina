@@ -302,8 +302,10 @@ jobs:
             ;;
             Darwin*)
               PLATFORM="MacOS"
-              # macOS：添加架构指定 + CoreFoundation框架链接（解决__dyld_iterate_images错误）
-              CMAKE_EXTRA_FLAGS="-DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_EXE_LINKER_FLAGS='-framework CoreFoundation'"
+              # macOS：添加架构指定 + CoreFoundation框架链接
+              CMAKE_EXTRA_FLAGS="-DCMAKE_OSX_ARCHITECTURES=$ARCH \
+                              -DCMAKE_EXE_LINKER_FLAGS=-framework CoreFoundation \
+                              -DCMAKE_SHARED_LINKER_FLAGS=-framework CoreFoundation"
             ;;
           esac
 
@@ -336,18 +338,19 @@ jobs:
               .
           fi
 
-      - name: Build project
-        run: |
-          # 跨系统获取CPU核心数（Linux/macOS/Windows分别适配）
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            CORES=$(nproc)
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            CORES=$(sysctl -n hw.ncpu)
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            CORES=$env:NUMBER_OF_PROCESSORS  # Windows系统获取核心数的环境变量
-          fi
-          # 执行编译命令（使用适配后的核心数）
-          cmake --build build --config Release --parallel $CORES
+      - name: Build project (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build --config Release --parallel $(nproc)
+
+      # 使用sysctl
+      - name: Build project (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build --config Release --parallel $(sysctl -n hw.ncpu)
+
+      - name: Build project (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release --parallel $env:NUMBER_OF_PROCESSORS
+
       - name: Prepare artifacts(Windows)
         if: runner.os == 'Windows'
         run: |
