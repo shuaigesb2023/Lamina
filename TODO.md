@@ -86,7 +86,7 @@
 - [ ] 🟧 replace(arr, lambda)（未完成）<br>
      备注：
 
-- [x ] same(a, b)（已完成）<br>
+- [x] same(a, b)（已完成）<br>
      备注：
 
 ## 类型方面
