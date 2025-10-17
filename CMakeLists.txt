@@ -96,6 +96,11 @@ add_library(lamina_core SHARED
     interpreter/utils/properties_parser.hpp
     interpreter/utils/src_manger.hpp
 )
+if (APPLE)
+  target_link_libraries(lamina_core PRIVATE "-framework CoreFoundation")
+  # 同时确保包含 dyld 头文件
+  target_include_directories(lamina_core PRIVATE /usr/include/mach-o)
+endif()
 
 # Add version header
 target_sources(lamina_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/version.hpp)
