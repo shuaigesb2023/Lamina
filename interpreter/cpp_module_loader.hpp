@@ -35,12 +35,20 @@
 #include <dlfcn.h>
 
 #if defined(__linux__)
+
 #include <elf.h>
 #include <link.h>
+
 #elif defined(__APPLE__)
+
 #include <mach-o/dyld.h>
 #include <mach-o/nlist.h>
 #include <mach-o/loader.h>
+extern "C" bool _dyld_iterate_images(
+    bool (*callback)(const struct mach_header*, uintptr_t, const char*, void*),
+    void* data
+);
+
 #endif
 
 #endif
