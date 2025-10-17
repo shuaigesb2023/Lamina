@@ -294,16 +294,16 @@ jobs:
         env:
           MUSL: "${{ matrix.musl }}"
         run: |
-            # 平台检测
-            case "$(uname -s)" in
+          # 平台检测
+          case "$(uname -s)" in
             Linux*)
-            PLATFORM="Linux"
-            # 安装环境时已设置好编译器后缀
+              PLATFORM="Linux"
+              # 安装环境时已设置好编译器后缀
             ;;
             Darwin*)
-            PLATFORM="MacOS"
-            # macOS：添加架构指定 + CoreFoundation框架链接（解决__dyld_iterate_images错误）
-            CMAKE_EXTRA_FLAGS="-DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_EXE_LINKER_FLAGS='-framework CoreFoundation'"
+              PLATFORM="MacOS"
+              # macOS：添加架构指定 + CoreFoundation框架链接（解决__dyld_iterate_images错误）
+              CMAKE_EXTRA_FLAGS="-DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_EXE_LINKER_FLAGS='-framework CoreFoundation'"
             ;;
           esac
 
@@ -340,11 +340,11 @@ jobs:
         run: |
           # 跨系统获取CPU核心数（Linux/macOS/Windows分别适配）
           if [ "$RUNNER_OS" == "Linux" ]; then
-          CORES=$(nproc)
+            CORES=$(nproc)
           elif [ "$RUNNER_OS" == "macOS" ]; then
-          CORES=$(sysctl -n hw.ncpu)
+            CORES=$(sysctl -n hw.ncpu)
           elif [ "$RUNNER_OS" == "Windows" ]; then
-          CORES=$env:NUMBER_OF_PROCESSORS  # Windows系统获取核心数的环境变量
+            CORES=$env:NUMBER_OF_PROCESSORS  # Windows系统获取核心数的环境变量
           fi
           # 执行编译命令（使用适配后的核心数）
           cmake --build build --config Release --parallel $CORES
