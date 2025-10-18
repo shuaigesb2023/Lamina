@@ -304,11 +304,26 @@ Value Interpreter::eval_CallExpr(const CallExpr* call) {
     }
 
     // 如果是要获取成员，特殊处理
-    Value self;
+    Value self = LAMINA_NULL;
     Value left;
-    if (auto* g_mem = dynamic_cast<const GetMemberExpr*>(node)) {
+
+    if (auto* g_mem = dynamic_cast<const GetMemberExpr*>(call->callee.get())) {
+
         self = eval(g_mem->father.get());
-        // ToDo
+        if (self.is_lstruct()) {
+            const auto lstruct_ = std::get<std::shared_ptr<lmStruct>>(self.data);
+
+            const auto& attr_name = g_mem->child->name;
+            auto res = lstruct_->find(attr_name);
+            if (res == nullptr) {
+                L_ERR("AttrError: struct hasn't attribute named " + attr_name);
+                return LAMINA_NULL;
+            }
+            left = res->value;
+        }
+        else {
+            L_ERR("Type of left can't get it member");
+        }
     }
     else {
         left = eval(call->callee.get());
@@ -330,7 +345,7 @@ Value Interpreter::eval_CallExpr(const CallExpr* call) {
             return {};
         }
         // User function
-        return Interpreter::call_function(func.get(), args);
+        return Interpreter::call_function(func.get(), args, self);
     }
 
     if (std::holds_alternative<std::shared_ptr<LmCppFunction>>(left.data)) {
@@ -352,8 +367,8 @@ Value Interpreter::eval_CallExpr(const CallExpr* call) {
     return {};
 }
 
-Value Interpreter::call_function(const LambdaDeclExpr* func, const std::vector<Value>& args) {
-    if (func == nullptr) {
+Value Interpreter::call_function(const LambdaDeclExpr* func, const std::vector<Value>& args, Value self) {
+    if (func == nullptr ) {
         std::cerr << "Error: Function at '" << func << "' is null" << std::endl;
         return Value("<func error>");
     }
@@ -364,6 +379,9 @@ Value Interpreter::call_function(const LambdaDeclExpr* func, const std::vector<V
     // Pass arguments
     for (size_t j = 0; j < func->params.size(); ++j) {
         set_variable(func->params[j], args[j]);
+    }
+    if (!self.is_null()){
+        set_variable("self", self);
     }
     // Execute function body, capture return
     try {
