@@ -184,9 +184,6 @@ var student = {
 ```
 
 ### 8. 结构体成员访问
-**注意**: 为结构体设置成员的语法暂时未推出
-您可以先临时通过 `setattr(kstruct: struct, name: string, val: any) -> null` 实现相关功能
-
 **模板**：
 ```lamina
 struct_name.key; // 访问结构体的指定成员
@@ -196,6 +193,7 @@ struct_name.key; // 访问结构体的指定成员
 var student = { name = "Tom"; age = 15; };
 print("学生姓名：", student.name); // 输出"学生姓名：Tom"
 print("学生年龄：", student.age); // 输出"学生年龄：15"
+student.age = 16
 ```
 
 ### 9. 模块引入
