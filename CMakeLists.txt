@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16.3)
-project(lamina VERSION 1.2.0 LANGUAGES CXX)# lamina version here
+project(lamina VERSION 1.1.0 LANGUAGES CXX)# lamina version here
 
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR}/lamina)
