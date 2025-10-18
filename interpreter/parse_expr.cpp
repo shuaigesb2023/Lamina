@@ -3,6 +3,7 @@
 #include "parser.hpp"
 
 std::unique_ptr<Expression> Parser::parse_expression() {
+    // ToDo: add op support 'and' 'or' 'not in'
     return parse_comparison();
 }
 
