@@ -798,6 +798,9 @@ Value Interpreter::eval_BinaryExpr(const BinaryExpr* bin) {
             if (bin->op == "<=") return Value(lb <= rb);
             if (bin->op == ">") return Value(lb > rb);
             if (bin->op == ">=") return Value(lb >= rb);
+        } else if (l.is_null() && r.is_null()) {
+            if (bin->op == "==") return Value(true);
+            return Value(false);
         } else {
             // Type mismatch - only equality/inequality make sense
             if (bin->op == "==") return Value(false);   // Different types are never equal
