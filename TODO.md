@@ -112,8 +112,16 @@
 - [ ] ⚠️ LmComplex（未完成）<br>
      备注：复数类型
 
-- [ ] ⚠️ LmList（未完成）<br>
+- [ ] ⚠️ LmList（正在做）<br>
      备注：链表类型
+
+     已完成基本实线，正在debug及完善
+
+     无具体引用，欢迎后人补充，文件位置
+
+     底层模板类：`interpreter/base_list.hpp`
+
+     继承套用：`interpreter/list.hpp`
 
 ## 其他
 - [ ] ⚠️ 测试新的c++ module loader（未完成）<br>
