@@ -8,6 +8,7 @@
 #else
 #define LAMINA_API
 #endif
+#include "lamina_api/lamina.hpp"
 #include "lamina_api/ast.hpp"
 #include "lamina_api/value.hpp"
 #include <functional>
