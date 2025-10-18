@@ -122,12 +122,10 @@ Value xpcall(const std::vector<Value>& args){
     if (!args[0].is_lambda() and !args[1].is_lambda()) return LAMINA_NULL;
     const auto func = std::get<std::shared_ptr<LambdaDeclExpr>>(args[0].data);
     const auto handle = std::get<std::shared_ptr<LambdaDeclExpr>>(args[1].data);
-    std::vector<Value> new_args = std::vector(args.begin() + 2, args.end());
+    const auto new_args = std::vector(args.begin() + 2, args.end());
     try {
-        Value result;
-        result = Interpreter::call_function(
-            func.get(), new_args
-        );
+        Value result = Interpreter::call_function(
+                func.get(), new_args);
         return result;
     }
     catch (std::exception& e) {
@@ -142,7 +140,6 @@ Value xpcall(const std::vector<Value>& args){
     catch (...) {
         return LAMINA_NULL;
     }
-    return LAMINA_NULL;
 }
 
 Value typeof_(const std::vector<Value>& args) {
