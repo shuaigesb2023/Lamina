@@ -18,20 +18,7 @@ Value input(const std::vector<Value>& args) {
     }
 
     if (std::getline(std::cin, input_line)) {
-        // Try to parse as number first
-        try {
-            // Check if it contains a decimal point for float
-            if (input_line.find('.') != std::string::npos) {
-                double d = std::stod(input_line);
-                return Value(d);
-            } else {
-                int i = std::stoi(input_line);
-                return Value(i);
-            }
-        } catch (...) {
-            // Return as string if not a number
-            return Value(input_line);
-        }
+        return Value(input_line);
     }
 
     // Return empty string if input failed
