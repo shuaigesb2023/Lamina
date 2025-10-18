@@ -303,7 +303,16 @@ Value Interpreter::eval_CallExpr(const CallExpr* call) {
         args.push_back(eval(arg.get()));
     }
 
-    const auto left = eval(call->callee.get());
+    // 如果是要获取成员，特殊处理
+    Value self;
+    Value left;
+    if (auto* g_mem = dynamic_cast<const GetMemberExpr*>(node)) {
+        self = eval(g_mem->father.get());
+        // ToDo
+    }
+    else {
+        left = eval(call->callee.get());
+    }
     if (!left.is_lambda() and !left.is_lmCppFunction()) {
         std::cerr << "Left type '" << left.to_string() << "' is not a callable object " << std::endl;
         return LAMINA_NULL;
