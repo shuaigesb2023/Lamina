@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-namespace __LAMINA::List {
+namespace __LAMINA::ListType {
 
 	template <class VT>//value type
 	class base_list {
@@ -146,6 +146,7 @@ namespace __LAMINA::List {
 	};
 
 }
+
 
 
 #endif // !LAMINALIST
