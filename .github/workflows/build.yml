@@ -1,7 +1,13 @@
 name: Build Lamina Interpreter
 
+# Nightly build + manual trigger
 on:
-  push:
+  # Run nightly at 01:00 PT (Pacific Time) -> UTC 08:00; adjust cron as needed
+  schedule:
+    - cron: '0 8 * * *'
+  # Allow manual runs from the Actions UI
+  workflow_dispatch: {}
+  # Keep PR-triggered builds enabled for pull requests
   pull_request:
 
 jobs:
