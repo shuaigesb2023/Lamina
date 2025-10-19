@@ -14,7 +14,7 @@
 /_____/\__,_/_/ /_/ /_/_/_/ /_/\__,_/
 </code>
 
-
+### RC阶段停止接收新特性、语法、功能，仅作为debug阶段。
 
 [![GitHub issues](https://img.shields.io/github/issues/lamina-dev/Lamina)](https://github.com/Lamina-dev/Lamina/issues)
 [![GitHub stars](https://img.shields.io/github/stars/lamina-dev/Lamina?style=flat)](https://github.com/Lamina-dev/Lamina/stargazers)
