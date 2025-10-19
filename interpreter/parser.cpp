@@ -189,6 +189,10 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         skip_token(";");
         tok = curr_token();
     }
+    while (tok.type != LexerTokenType::EndOfLine) {
+        skip_token();
+        tok = curr_token();
+    }
     skip_token();
     return nullptr;
 }
