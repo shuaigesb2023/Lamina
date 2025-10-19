@@ -185,14 +185,12 @@ std::unique_ptr<Statement> Parser::parse_stmt() {
         skip_end_of_ln();
         return std::make_unique<ExprStmt>(std::move(expr));
     }
-    while (tok.type != LexerTokenType::Semicolon) {
-        skip_token(";");
-        tok = curr_token();
+
+    while (curr_tok_idx_ < tokens_.size() && curr_token().type != LexerTokenType::EndOfLine) {
+        skip_token(); 
     }
-    while (tok.type != LexerTokenType::EndOfLine) {
-        skip_token();
-        tok = curr_token();
+    if (curr_tok_idx_ < tokens_.size()) {
+        skip_token(); // 跳过 EndOfLine
     }
-    skip_token();
     return nullptr;
 }
