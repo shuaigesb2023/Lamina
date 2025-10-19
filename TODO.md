@@ -99,6 +99,8 @@
 
      成为lamina唯一整数类型
 
+     现已有库如想为此做贡献请前往`Lamina-dev/Lamina_BigNum`
+
 - [ ] ⚠️ LmDec（未完成）<br>
      备注：
 
@@ -108,6 +110,7 @@
 
      需要设置小数位数(以防止无限循环小数和不循环小数）
 
+     现已有库如想为此做贡献请前往`Lamina-dev/Lamina_BigNum`
 
 - [ ] ⚠️ LmComplex（未完成）<br>
      备注：复数类型
