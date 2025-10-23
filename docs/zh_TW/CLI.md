@@ -1,12 +1,12 @@
 ### Lamina支援執行這些指令
 
-『`bash
-lamina <> || start repl
-lamina <path> || run the file at path
-lamina run <path> || run the file at path
-lamina version || show the version of lamina
-lamina repl || start repl
-lamina help || show help
+```bash
+lamina <>          ||  start repl
+lamina <path>      ||  run the file at path
+lamina run <path>  ||  run the file at path
+lamina version     ||  show the version of lamina
+lamina repl        ||  start repl
+lamina help        ||  show help
 ```
 
 ### 開發環境如何執行?
