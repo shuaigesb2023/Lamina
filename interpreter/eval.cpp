@@ -272,9 +272,10 @@ Value Interpreter::eval_LiteralExpr(const LiteralExpr* node) {
         if (value.find('.') != std::string::npos ||
             value.find('e') != std::string::npos ||
             value.find('E') != std::string::npos) {
-            // Parse as double for floating point numbers and scientific notation
-            double d = std::stod(node->value);
-            return Value(d);
+            // 小数变为无理数
+            auto temp = templatestdftr::float_to_rational<BigInt>(node->value);
+            Rational r(temp.first, temp.second);
+            return Value(r);
         }
         // 先尝试用 int 解析，只有溢出时才用 BigInt
         try {
