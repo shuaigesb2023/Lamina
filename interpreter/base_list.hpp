@@ -1,3 +1,4 @@
+//类型说明在docs/zh_CN/wiki.md下
 
 #ifndef LAMINALIST
 #define LAMINALIST
@@ -32,7 +33,7 @@ namespace __LAMINA::ListType {
 		base_list_node* end;
 
 		base_list() { root = safe_new(new base_list_node()); end = root; }
-		base_list(const VT& val) { root = safe_new(new base_list_node(val));  end = root; }
+		base_list(const VT& val) :base_list() { push_back(val); }
 		base_list(const base_list& other) :base_list() {
 			*this = other;
 		}
@@ -46,6 +47,13 @@ namespace __LAMINA::ListType {
 		}
 
 		inline void push_back(const base_list<VT>& other) {
+			if (this == &other) {
+				base_list<VT> t = other;
+				end->next = t.root->next;
+				end = t.end;
+				delete t.root;
+				return;
+			}
 			base_list_node* t = other.root->next;
 			while (t) {
 				push_back(t->value);
@@ -126,6 +134,8 @@ namespace __LAMINA::ListType {
 
 		inline void eraser(size_t index) { pop(index); }
 
+		inline void eraser(size_t begini, size_t endi) { pop(begini, endi); }
+
 		//获取区间，左闭右开
 		inline base_list<VT> get_range(size_t begini, size_t endi) const{
 			if (endi <= begini)throw std::runtime_error("End must greater than begin");
@@ -181,6 +191,7 @@ namespace __LAMINA::ListType {
 		}
 
 		inline void operator=(const base_list<VT>& other) {
+			if (this == &other)return;
 			clear();
 			base_list_node* t = other.root->next;
 			while (t) {
