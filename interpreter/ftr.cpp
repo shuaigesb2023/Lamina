@@ -1,7 +1,7 @@
 #include<vector>
 #include<utility>
 #include<string>
-//警告：此文件未做任何规范，后续会跟进
+//TODO:与其说是模板类，实际上已经不是了，还缺少完善、优化、规范
 namespace templatestdftr {
     /*
     将函数模板化
@@ -69,18 +69,41 @@ namespace templatestdftr {
         //返回值第一个为分子第二个为分母
         TP up = TP(0), down = TP(1);//up分子，down分母
         unsigned long long i = 0;
-        while (i < num.size() and num[i] != '.') {//处理整数部分
+        while (i < num.size() and num[i] != '.' and num[i] != 'e' and num[i] != 'E') {//处理整数部分
             up = up * TP(10) + TP(num[i] - '0');
             i++;
         }
-        if (i == num.size())return{ up,down };//不是小数，直接返回
+        if (i == num.size() or num[i] == 'e' or num[i] == 'E') {
+            if (i != num.size() and (num[i] == 'e' or num[i] == 'E')) {//如果为科学计数法
+                i++;
+                if (num[i] == '-') {
+                    i++;
+                    TP p = TP(0);
+                    while (i < num.size()) {
+                        p = p * TP(10) + TP(num[i] - '0');
+                        i++;
+                    }
+                    down = down * (TP(10).power(p));
+                }
+                else {
+                    TP p = TP(0);
+                    while (i < num.size()) {
+                        p = p * TP(10) + TP(num[i] - '0');
+                        i++;
+                    }
+                    up = up * (TP(10).power(p));
+                }
+
+            }
+            return{ up,down };//不是小数，直接返回
+        }
         i++;
         std::vector<short> n;//使用vector容器暂时存储小数位
-        while (i < num.size() and num[i] != '.') {
+        while (i < num.size() and num[i] != '.' and num[i] != 'e' and num[i] != 'E') {
             n.emplace_back(num[i] - '0');
             i++;
         }
-        if (i == num.size()) {//检查是否为循环小数
+        if (i == num.size() or ((num[i] == 'e' or num[i] == 'E'))) {//检查是否为循环小数
             //处理不循环小数
             //直接添加到末尾
             for (short& i : n) {
@@ -113,6 +136,29 @@ namespace templatestdftr {
             //相加
             up = up + xup;
         }
+
+        if (i != num.size() and (num[i] == 'e' or num[i] == 'E')) {//如果为科学计数法
+            i++;
+            if (num[i] == '-') {
+                i++;
+                TP p = TP(0);
+                while (i < num.size()) {
+                    p = p * TP(10) + TP(num[i] - '0');
+                    i++;
+                }
+                down = down * (TP(10).power(p));
+            }
+            else {
+                TP p = TP(0);
+                while (i < num.size()) {
+                    p = p * TP(10) + TP(num[i] - '0');
+                    i++;
+                }
+                up = up * (TP(10).power(p));
+            }
+            
+        }
+
         //约分化简，使用gcd
         TP g = unllgcd<TP>(up, down);
         up = up / g;
