@@ -69,6 +69,7 @@ std::unique_ptr<Expression> Parser::parse_unary() {
     // ToDo: add op support 'not'
     if (curr_token().type == LexerTokenType::Minus) {
         auto tok = curr_token();
+        skip_token();
         auto operand = parse_unary();
         return std::make_unique<UnaryExpr>("-", std::move(operand));
     }
