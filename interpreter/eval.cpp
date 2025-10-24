@@ -3,6 +3,7 @@
 #include "../extensions/standard/lmStruct.hpp"
 #include "../extensions/standard/cas.hpp"
 #include "lamina_api/symbolic.hpp"
+#include "lamina_api/symbolic.hpp"
 #include <optional>
 #include <iostream>
 
