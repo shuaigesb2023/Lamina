@@ -1,25 +1,26 @@
-#include <string>
-#include <utility>
-#include <vector>
+#include<vector>
+#include<utility>
+#include<string>
+//警告：此文件未做任何规范，后续会跟进
 namespace templatestdftr {
     /*
-    ������ģ�廯
-    ������Ҫ֧�� + - / % * = == 
+    将函数模板化
+    类型需要支持 + - / % * = == 
     */
-    template<class TP = unsigned long long>
-    TP unllgcd(TP a, TP b) {//�����Լ����Ĭ��a>=b
-        if (b == TP(0)) return a;
+    template <class TP = unsigned long long>
+    TP unllgcd(TP a, TP b) {//求最大公约数，默认a>=b
+        if (b == TP(0))return a;
         return unllgcd(b, a % b);
     }
     std::pair<unsigned long long, unsigned long long> jiance(std::vector<short>& n) {
-        //���ѭ�����֣�����ѭ���Ŀ�ʼ�ͽ���������ұգ�
-        unsigned long long h1[10] = {};//ʹ�ù�ϣ����¼���ֳ��ֵĴ���
+        //检测循环部分，返回循环的开始和结束（左闭右闭）
+        unsigned long long h1[10] = {};//使用哈希表记录数字出现的次数
         unsigned long long h2[10] = {};
 
-        for (short& i: n) h1[i]++;//��һ�ֱ�����¼ÿ�����ֵ��ܳ��ִ�����ʹ�õ�������
+        for (short& i : n)h1[i]++;//第一轮遍历记录每个数字的总出现次数（使用迭代器）
         bool flag = true;
 
-        for (unsigned long long i = 0; i < n.size(); i++) {//�ڶ��ֱ���
+        for (unsigned long long i = 0; i < n.size(); i++) {//第二轮遍历
             flag = true;
             for (int j = 0; j < 10; j++) {
                 if ((h1[j] - h2[j]) & 1) {
@@ -32,10 +33,10 @@ namespace templatestdftr {
                 unsigned long long ti1, ti2;
                 bool ok = true;
                 while (!((i2 - i1) & 1) and ok) {
-                    //����Ƿ�ѭ��
-                    //ʹ��˫ָ��
-                    //��θĵıȽ϶಻дСע����
-                    //ԭ��Ϊ���Ͻ�ѭ����Χ����ֱ����ѭ��Ϊֹ�����һ�ֲ�ѭ�������ڶ��ֱ���
+                    //检测是否循环
+                    //使用双指针
+                    //这段改的比较多不写小注释了
+                    //原理为不断将循环范围减半直到不循环为止如果第一轮不循环侧进入第二轮遍历
                     ti1 = i1;
                     ti2 = i1 + ((i2 - i1) >> 1);
                     while (ti2 < i2) {
@@ -45,77 +46,79 @@ namespace templatestdftr {
                         }
                         ti1++;
                         ti2++;
-                    }
-                    if (ok) {
+                    }if (ok) {
                         i2 = i1 + ((i2 - i1) >> 1);
-                    } else if (i2 == n.size()) {
-                        break;
-                    } else {
-                        return {i1, i2 - 1};
                     }
-                }
-                if (ok) {//�������ѭ������
-                    return {i1, i2 - 1};
+                    else if (i2 == n.size()) {
+                        break;
+                    }
+                    else {
+                        return { i1,i2 - 1 };
+                    }
+                }if (ok) {//如果保持循环返回
+                    return { i1,i2 - 1 };
                 }
             }
             h2[n[i]]++;
         }
-        return {n.size() - 1, n.size() - 1};
+        return { n.size()-1,n.size()-1};
+
     }
-    template<class TP = unsigned long long>
+    template <class TP = unsigned long long>
     std::pair<TP, TP> float_to_rational(const std::string num) {
-        //����ֵ��һ��Ϊ���ӵڶ���Ϊ��ĸ
-        TP up = TP(0), down = TP(1);//up���ӣ�down��ĸ
+        //返回值第一个为分子第二个为分母
+        TP up = TP(0), down = TP(1);//up分子，down分母
         unsigned long long i = 0;
-        while (i < num.size() and num[i] != '.') {//������������
+        while (i < num.size() and num[i] != '.') {//处理整数部分
             up = up * TP(10) + TP(num[i] - '0');
             i++;
         }
-        if (i == num.size()) return {up, down};//����С����ֱ�ӷ���
+        if (i == num.size())return{ up,down };//不是小数，直接返回
         i++;
-        std::vector<short> n;//ʹ��vector������ʱ�洢С��λ
+        std::vector<short> n;//使用vector容器暂时存储小数位
         while (i < num.size() and num[i] != '.') {
             n.emplace_back(num[i] - '0');
             i++;
         }
-        if (i == num.size()) {//����Ƿ�Ϊѭ��С��
-            //������ѭ��С��
-            //ֱ�����ӵ�ĩβ
-            for (short& i: n) {
+        if (i == num.size()) {//检查是否为循环小数
+            //处理不循环小数
+            //直接添加到末尾
+            for (short& i : n) {
                 up = up * TP(10) + TP(i);
                 down = down * TP(10);
             }
-        } else {
-            //����ѭ��С��
-            //�ȼ��ѭ�����֣��ٽ���ѭ������ֱ�����ӣ��ټӣ�ѭ������/999...9��ѭ�����ֳ��ȸ�9��/pow��10��len����ѭ�����֣�����
+        }
+        else {
+            //处理循环小数
+            //先检测循环部分，再将不循环部分直接添加，再加（循环部分/999...9（循环部分长度个9）/pow（10，len（不循环部分）））
             std::pair<unsigned long long, unsigned long long> xun = jiance(n);
 
-            //�ñ�����ʱ��¼ѭ������
+            //用变量临时记录循环部分
             TP xup = TP(0), xdown = TP(0);
             for (unsigned long long i = xun.first; i <= xun.second; i++) {
                 xup = xup * TP(10) + TP(n[i]);
                 xdown = xdown * TP(10) + TP(9);
             }
 
-            //����ѭ����������
+            //将不循环部分添加
             for (unsigned long long i = 0; i < xun.first; i++) {
                 up = up * TP(10) + TP(n[i]);
                 down = down * TP(10);
             }
 
-            //ͨ��
+            //通分
             up = up * xdown;
             down = down * xdown;
 
-            //���
+            //相加
             up = up + xup;
         }
-        //Լ�ֻ���ʹ��gcd
+        //约分化简，使用gcd
         TP g = unllgcd<TP>(up, down);
         up = up / g;
         down = down / g;
 
-        //����
-        return {up, down};
+        //返回
+        return { up,down };
     }
-}// namespace templatestdftr
+}
