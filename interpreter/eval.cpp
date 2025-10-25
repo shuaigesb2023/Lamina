@@ -3,9 +3,9 @@
 #include "../extensions/standard/lmStruct.hpp"
 #include "../extensions/standard/cas.hpp"
 #include "lamina_api/symbolic.hpp"
-#include "lamina_api/symbolic.hpp"
 #include <optional>
 #include <iostream>
+#include <stdint.h>
 
 enum VALUE_TYPE : int {
     VALUE_IS_STRING = 1,
@@ -273,7 +273,7 @@ Value Interpreter::eval_LiteralExpr(const LiteralExpr* node) {
         if (value.find('.') != std::string::npos ||
             value.find('e') != std::string::npos ||
             value.find('E') != std::string::npos) {
-            // 小数变为无理数
+            // 小数变为有理数
             Rational r(node->value);
             return Value(r);
         }
