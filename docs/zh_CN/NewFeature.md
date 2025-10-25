@@ -102,6 +102,8 @@
 
     getattr
 
+    to_string
+
 - repl可以直接计算表达式(如1+1而不需要print(1+1))
 
 - repl高亮关键字及自动补齐
