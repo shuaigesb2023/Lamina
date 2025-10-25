@@ -1,6 +1,7 @@
 # 1.1.0(RC)的新功能(对比上一个版本)
 
 - 新增结构体类型以及对结构体的操作(当前的结构体可以实现dict和原型的功能，它本质上是HashMap)
+    
     struct x {y=0, z=10} 结构体声明语句
 
     var x = {y=0, z=10} 匿名结构体声明
@@ -12,6 +13,7 @@
     x.y = v 设置子项表达式语句
 
 - OOP支持
+
     结构体通过设置__parent__属性实现单继承
 
     结构体通过new(src_struct)函数实现创造新对象(实际上是设置新对象的__parent__属性为src_struct结构体)
@@ -19,19 +21,23 @@
     self变量: 在x.m() 调用成员函数时自动注入函数局部
 
 - 错误处理
+
     xpcall(f, handle, arg1, arg2 ... ) 函数
 
 - 新增匿名函数
+
     do 表达式
 
     |p| expr 表达式
 
 - 新增模块系统
+
     include path语句
 
     module::sub 表达式
 
 - 新增数组取子项语句
+
     arr[index]
 
 - 重构Parser
@@ -49,17 +55,29 @@
 - 部分内置函数移动到标准库/内置库
 
 - 新内置函数
+
     foreach
+
     map
+
     find
+
     typeof
+
     copy_struct
+
     exit
+
     vars
+
     locals
+
     globals
+
     new
+
     xpcall
+
     same
 
 - repl可以直接计算表达式(如1+1而不需要print(1+1))
