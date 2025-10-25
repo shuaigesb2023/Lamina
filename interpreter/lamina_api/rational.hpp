@@ -61,6 +61,139 @@ public:
         simplify();
     }
 
+    Rational(const std::string& num):Rational() {
+        BigInt &up = numerator, &down = denominator;
+        BigInt bigint0to10[11];
+        for (int i = 0; i < 11; i++) bigint0to10[i] = BigInt(i);
+        uint64_t i = 0;
+        while (i < num.size() and num[i] != '.' and num[i] != 'e' and num[i] != 'E') {//处理整数部分
+            up *= bigint0to10[10];
+            up += bigint0to10[num[i] - '0'];
+            i++;
+        }
+        if (i == num.size() or num[i] == 'e' or num[i] == 'E') {
+            if (i != num.size() and (num[i] == 'e' or num[i] == 'E')) {//如果为科学计数法
+                i++;
+                if (num[i] == '-') {
+                    i++;
+                    down *= bigint0to10[10].power(BigInt(std::string(num.begin() + i, num.end())));
+                } else {
+                    up *= bigint0to10[10].power(BigInt(std::string(num.begin() + i, num.end())));
+                }
+            }
+            return ;//不是小数，直接跳出
+        }
+        i++;
+        std::vector<short> n;//使用vector容器暂时存储小数位
+        while (i < num.size() and num[i] != '.' and num[i] != 'e' and num[i] != 'E') {
+            n.emplace_back(num[i] - '0');
+            i++;
+        }
+        if (i == num.size() or ((num[i] == 'e' or num[i] == 'E'))) {//检查是否为循环小数
+            //处理不循环小数
+            //直接添加到末尾
+            for (short& i: n) {
+                up *= bigint0to10[10];
+                down *= bigint0to10[10];
+                up += bigint0to10[i];
+            }
+        } else {
+            //处理循环小数
+            //先检测循环部分，再将不循环部分直接添加，再加（循环部分/999...9（循环部分长度个9）/pow（10，len（不循环部分）））
+            std::pair<uint64_t, uint64_t> xun = jiance(n);
+
+            //用变量临时记录循环部分
+            BigInt xup = BigInt(0), xdown = BigInt(0);
+            for (uint64_t i = xun.first; i <= xun.second; i++) {
+                xup *= bigint0to10[10];
+                xup += bigint0to10[n[i]];
+                xdown *= bigint0to10[10];
+                xdown += bigint0to10[9];
+            }
+
+            //将不循环部分添加
+            for (uint64_t i = 0; i < xun.first; i++) {
+                up *= bigint0to10[10];
+                up += bigint0to10[n[i]];
+                down *= bigint0to10[10];
+            }
+
+            //通分
+            up = up * xdown;
+            down = down * xdown;
+
+            //相加
+            up = up + xup;
+        }
+
+        if (i != num.size() and (num[i] == 'e' or num[i] == 'E')) {//如果为科学计数法
+            i++;
+            if (num[i] == '-') {
+                i++;
+                down *= bigint0to10[10].power(BigInt(std::string(num.begin() + i, num.end())));
+            } else {
+                up *= bigint0to10[10].power(BigInt(std::string(num.begin() + i, num.end())));
+            }
+        }
+
+        simplify();
+    }
+
+private:
+    std::pair<uint64_t, uint64_t> jiance(std::vector<short>& n) {
+        //检测循环部分，返回循环的开始和结束（左闭右闭）
+        uint64_t h1[10] = {};//使用哈希表记录数字出现的次数
+        uint64_t h2[10] = {};
+
+        for (short& i: n) h1[i]++;//第一轮遍历记录每个数字的总出现次数（使用迭代器）
+        bool flag = true;
+
+        for (uint64_t i = 0; i < n.size(); i++) {//第二轮遍历
+            flag = true;
+            for (int j = 0; j < 10; j++) {
+                if ((h1[j] - h2[j]) & 1) {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag) {
+                uint64_t i1 = i + 1, i2 = n.size();
+                uint64_t ti1, ti2;
+                bool ok = true;
+                while (!((i2 - i1) & 1) and ok) {
+                    //检测是否循环
+                    //使用双指针
+                    //这段改的比较多不写小注释了
+                    //原理为不断将循环范围减半直到不循环为止如果第一轮不循环侧进入第二轮遍历
+                    ti1 = i1;
+                    ti2 = i1 + ((i2 - i1) >> 1);
+                    while (ti2 < i2) {
+                        if (n[ti1] != n[ti2]) {
+                            ok = false;
+                            break;
+                        }
+                        ti1++;
+                        ti2++;
+                    }
+                    if (ok) {
+                        i2 = i1 + ((i2 - i1) >> 1);
+                    } else if (i2 == n.size()) {
+                        break;
+                    } else {
+                        return {i1, i2 - 1};
+                    }
+                }
+                if (ok) {//如果保持循环返回
+                    return {i1, i2 - 1};
+                }
+            }
+            h2[n[i]]++;
+        }
+        return {n.size() - 1, n.size() - 1};
+    }
+
+public:
+
     // 由double构造
     static Rational from_double(double value) {
         if (value == 0.0) {

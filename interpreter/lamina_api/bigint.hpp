@@ -452,6 +452,31 @@ public:
         return !(*this == other);
     }
 
+    //此函数并无优化功能，只是编写充数
+    inline void operator+=(const BigInt& other) {
+        *this = *this + other;
+    }
+
+    //此函数并无优化功能，只是编写充数
+    inline void operator-=(const BigInt& other) {
+        *this = *this - other;
+    }
+
+    //此函数并无优化功能，只是编写充数
+    inline void operator*=(const BigInt& other) {
+        *this = *this * other;
+    }
+
+    //此函数并无优化功能，只是编写充数
+    inline void operator/=(const BigInt& other) {
+        *this = *this / other;
+    }
+
+    //此函数并无优化功能，只是编写充数
+    inline void operator%=(const BigInt& other) {
+        *this = *this % other;
+    }
+
     // Mathematical functions
 
     // Absolute value - returns a copy with positive sign
