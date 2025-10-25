@@ -84,6 +84,10 @@
 
     system
 
+    assert
+
+    range
+
     update
 
     setattr
