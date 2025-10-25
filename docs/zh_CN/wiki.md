@@ -275,121 +275,120 @@ print("总和：", total); // 输出"总和：150"
 ## 基本类型
 
 1. **int**：普通整数类型，支持正负整数的算术运算，无需显式声明类型。  
-  示例：
-  
-  ```lamina
-  var a = 42; // 正整数
-  var b = -10; // 负整数
-  var c = a + b; // c = 32（int类型）
-  ```
-  
+   示例：
+   
+   ```lamina
+   var a = 42; // 正整数
+   var b = -10; // 负整数
+   var c = a + b; // c = 32（int类型）
+   ```
+
 2. **float**：浮点数类型，用于兼容传统浮点运算场景，存在精度限制。  
-  示例：
-  
-  ```lamina
-  var pi_approx = 3.14; // 浮点数
-  var temp = -0.5; // 负浮点数
-  ```
-  
+   示例：
+   
+   ```lamina
+   var pi_approx = 3.14; // 浮点数
+   var temp = -0.5; // 负浮点数
+   ```
+
 3. **rational**：精确有理数类型，自动以分数形式存储除法结果，避免精度丢失，支持自动化简。  
-  示例：
-  
-  ```lamina
-  var frac1 = 16/9; // 存储为16/9，非1.777...
-  var frac2 = 4/6; // 自动化简为2/3
-  var sum_frac = frac1 + frac2; // 精确计算，结果为34/9
-  ```
-  
+   示例：
+   
+   ```lamina
+   var frac1 = 16/9; // 存储为16/9，非1.777...
+   var frac2 = 4/6; // 自动化简为2/3
+   var sum_frac = frac1 + frac2; // 精确计算，结果为34/9
+   ```
+
 4. **irrational**：精确无理数类型，以符号形式存储（如√、π、e），支持符号化运算与化简。  
-  示例：
-  
-  ```lamina
-  var root2 = sqrt(2); // 存储为√2
-  var root8 = sqrt(8); // 自动化简为2√2
-  var pi_val = pi(); // 存储为π
-  var product = root2 * root2; // 结果为2（int类型）
-  ```
-  
+   示例：
+   
+   ```lamina
+   var root2 = sqrt(2); // 存储为√2
+   var root8 = sqrt(8); // 自动化简为2√2
+   var pi_val = pi(); // 存储为π
+   var product = root2 * root2; // 结果为2（int类型）
+   ```
+
 5. **bool**：布尔类型，仅包含`true`（真）和`false`（假）两个值，用于条件判断。  
-  示例：
-  
-  ```lamina
-  var is_pass = true;
-  var is_empty = false;
-  if is_pass {
+   示例：
+   
+   ```lamina
+   var is_pass = true;
+   var is_empty = false;
+   if is_pass {
       print("考试通过");
-  }
-  ```
-  
+   }
+   ```
+
 6. **string**：字符串类型，用双引号包裹文本内容，支持字符串相关函数操作。  
-  示例：
-  
-  ```lamina
-  var greeting = "Hello, Lamina!";
-  var name = "Alice";
-  ```
-  
+   示例：
+   
+   ```lamina
+   var greeting = "Hello, Lamina!";
+   var name = "Alice";
+   ```
+
 7. **null**：空值类型，仅表示`null`一个值，用于表示变量未赋值或无返回值。  
-  示例：
-  
-  ```lamina
-  var empty_var = null;
-  func no_return() {
+   示例：
+   
+   ```lamina
+   var empty_var = null;
+   func no_return() {
       print("无返回值");
       return null; // 显式返回空值
-  }
-  ```
-  
+   }
+   ```
+
 8. **bigint**：任意精度大整数类型，需显式声明，支持超大整数（如阶乘、大数值运算）。  
-  示例：
-  
-  ```lamina
-  bigint large_num = 999999999999999; // 超大整数
-  bigint fact_30 = 30!; // 30的阶乘（大整数结果）
-  ```
-  
+   示例：
+   
+   ```lamina
+   bigint large_num = 999999999999999; // 超大整数
+   bigint fact_30 = 30!; // 30的阶乘（大整数结果）
+   ```
+
 9. **array**：数组类型，用方括号包裹元素，支持索引访问和数组相关函数。  
-  示例：
-  
-  ```lamina
-  var scores = [90, 85, 92]; // 一维数组
-  var names = ["Tom", "Alice", "Bob"]; // 字符串数组
-  ```
-  
+   示例：
+   
+   ```lamina
+   var scores = [90, 85, 92]; // 一维数组
+   var names = ["Tom", "Alice", "Bob"]; // 字符串数组
+   ```
+
 10. **matrix**：矩阵类型，用嵌套数组表示（二维数组），支持矩阵行列式、乘法等运算。  
-  示例：
-  
-  ```lamina
-  var mat2x2 = [[1, 2], [3, 4]]; // 2x2矩阵
-  var mat3x1 = [[1], [2], [3]]; // 3x1列矩阵
-  ```
-  
+    示例：
+    
+    ```lamina
+    var mat2x2 = [[1, 2], [3, 4]]; // 2x2矩阵
+    var mat3x1 = [[1], [2], [3]]; // 3x1列矩阵
+    ```
+
 11. **struct**：结构体类型，用大括号包裹键值对，支持自定义成员和成员访问。  
-  示例：
-  
-  ```lamina
-  var person = {
+    示例：
+    
+    ```lamina
+    var person = {
       name = "Bob";
       age = 20;
       is_student = true;
-  };
-  ```
-  
+    };
+    ```
+
 12. **lambda**：匿名函数类型，用于表示未命名的函数，可赋值给变量或作为参数传递。  
-  示例：
-  
-  ```lamina
-  var subtract = |a, b| a - b ; // lambda类型变量
-  ```
-  
+    示例：
+    
+    ```lamina
+    var subtract = |a, b| a - b ; // lambda类型变量
+    ```
+
 13. **module**：模块类型，通过`include`引入，包含模块内定义的函数、变量，支持`::`命名空间访问。  
-  示例：
-  
-  ```lamina
-  include random; // 引入模块，module类型
-  var result = random::random(); // 访问模块函数
-  ```
-  
+    示例：
+    
+    ```lamina
+    include random; // 引入模块，module类型
+    var result = random::random(); // 访问模块函数
+    ```
 
 ## 库
 
@@ -400,49 +399,48 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   sqrt(x) -> int/irrational
   ```
-  
+
 - **圆周率函数**：返回精确的圆周率符号π，类型为irrational。
   
   ```lamina
   pi() -> irrational
   ```
-  
+
 - **自然常数函数**：返回精确的自然常数符号e，类型为irrational。
   
   ```lamina
   e() -> irrational
   ```
-  
+
 - **正弦函数**：计算角度的正弦值，支持精确数值输入，返回对应精度结果。
   
   ```lamina
   sin(x) -> rational/irrational/float
   ```
-  
+
 - **余弦函**数：计算角度的余弦值，支持精确数值输入，返回对应精度结果。
   
   ```lamina
   cos(x) -> rational/irrational/float
   ```
-  
+
 - **绝对值函数**：返回输入数值的绝对值，保持原类型不变。
   
   ```lamina
   abs(x) -> int/float/rational/irrational
   ```
-  
+
 - **自然对数函数**：计算数值的自然对数（以e为底），返回对应精度结果。
   
   ```lamina
   log(x) -> rational/irrational/float
   ```
-  
+
 - **阶乘函数**：计算非负整数的阶乘，支持int和bigint类型输入，返回对应整数类型。
   
   ```lamina
   factorial(n) -> int/bigint
   ```
-  
 
 ### 2. 向量/矩阵函数
 
@@ -451,25 +449,24 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   dot(v1: array, v2: array) -> int/rational/float
   ```
-  
+
 - **向量叉积函数**：计算两个三维向量的叉积，返回新的三维数组（矩阵）。
   
   ```lamina
   cross(v1: array, v2: array) -> array
   ```
-  
+
 - **向量模长函**数：计算向量的模长（长度），返回精确数值类型（irrational/rational等）。
   
   ```lamina
   norm(v: array) -> rational/irrational/float
   ```
-  
+
 - **矩阵行列式函数**：计算二维方阵的行列式，返回数值类型（int/rational等）。
   
   ```lamina
   det(mat: array) -> int/rational/float
   ```
-  
 
 ### 3. 工具函数
 
@@ -478,49 +475,48 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   print(...) -> null
   ```
-  
+
 - **输入函数**：在控制台显示提示文本，获取用户输入内容，返回字符串类型。
   
   ```lamina
   input(prompt: string) -> string/float
   ```
-  
+
 - **小数转分数函数**：将浮点数转换为精确的有理数（分数），自动化简。
   
   ```lamina
   fraction(x: float) -> rational
   ```
-  
+
 - **分数转小数函数**：将有理数（分数）转换为浮点数，支持按需保留精度。
   
   ```lamina
   decimal(x: rational) -> float
   ```
-  
+
 - **类型获取函数**：返回变量的类型名称，以字符串形式表示。
   
   ```lamina
   typeof(x) -> string
   ```
-  
+
 - **深拷贝函数**：对结构体、数组、匿名函数、模块等复合类型进行深拷贝，修改拷贝不影响原对象。
   
   ```lamina
   copy(x) -> any
   ```
-  
+
 - **大小获取函数**：返回数组的长度或结构体的成员数量，返回int类型。
   
   ```lamina
   size(x: array/struct) -> int
   ```
-  
+
 - **断言函数**：判断条件是否为true，若为false则抛出错误并显示自定义消息。
   
   ```lamina
   assert(condition: bool, msg: string = "") -> null
   ```
-  
 
 ### 4. 数组函数
 
@@ -529,25 +525,24 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   foreach(arr: array, func: lambda) -> null
   ```
-  
+
 - **数组映射函数**：遍历数组的每个元素，用指定函数处理元素，返回新的数组。
   
   ```lamina
   map(arr: array, func: lambda) -> array
   ```
-  
+
 - **数组查找函数**：在数组中查找首个满足条件的元素，返回元素值或null。
   
   ```lamina
   find(arr: array, func: lambda) -> any/null
   ```
-  
+
 - **数组替换函数**：替换数组中满足条件的元素，返回null。
   
   ```lamina
   replace(arr: array, func: lambda, new_val) -> null
   ```
-  
 
 ### 5. 字符串函数
 
@@ -556,13 +551,13 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   string::cat(...) -> string
   ```
-  
+
 - **字符获取函数**：获取指定索引的字符
   
   ```lamina
   string::at(index: int) -> int
   ```
-  
+
 - **子串截取函数**：从指定索引开始，截取指定长度的子串，返回新字符串。
   
   ```lamina
@@ -570,25 +565,24 @@ print("总和：", total); // 输出"总和：150"
   ```
   
   ### 6. 随机函数
-  
+
 - **随机浮点数函数**：返回0（含）到1（不含）之间的随机浮点数。
   
   ```lamina
   random::random() -> float
   ```
-  
+
 - **随机整数函数**：返回`[start, end]`范围内的随机整数（包含边界值）。
   
   ```lamina
   random::randint(start: int, end: int) -> int
   ```
-  
+
 - **随机字符串函数**：从输入字符串中随机选取一个字符，返回该字符（string类型）。
   
   ```lamina
   random::randstr(chars: string) -> string
   ```
-  
 
 ### 7. 时间函数
 
@@ -597,19 +591,18 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   time::time() -> string
   ```
-  
+
 - **日期获取函数**：返回当前系统日期，格式为"YYYY-MM-DD"，字符串类型。
   
   ```lamina
   time::date() -> string
   ```
-  
+
 - **日期格式化函数**：将日期字符串按指定格式转换，返回格式化后的日期字符串。
   
   ```lamina
   time::format_date(date: string, format: string = "YYYY-MM-DD") -> string
   ```
-  
 
 ### 8. CAS相关函数
 
@@ -618,99 +611,95 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   cas::parse(expr: string) -> cas_object
   ```
-  
+
 - **CAS化简函数**：对CAS对象表示的数学表达式进行化简，返回化简后的CAS对象。
   
   ```lamina
   cas::simplify(cas_obj: cas_object) -> cas_object
   ```
-  
+
 - **CAS求导函数**：对CAS对象表示的函数求导，返回求导后的CAS对象。
   
   ```lamina
   cas::differentiate(cas_obj: cas_object, var: string) -> cas_object
   ```
-  
+
 - **CAS计算函数**：对CAS对象表示的表达式进行数值或符号计算，返回计算结果（CAS对象或基础数据类型）。
   
   ```lamina
   cas::evaluate(cas_obj: cas_object) -> any
   ```
-  
+
 - **CAS存储函数**：将指定名称与CAS对象关联并存储，便于后续调用，无返回值或返回存储成功标识（布尔类型）。
   
   ```lamina
   cas::store(name: string, cas_obj: cas_object) -> bool/void
   ```
-  
+
 - **CAS加载函数**：根据指定名称加载已存储的CAS对象，返回对应的CAS对象（若不存在则返回空）。
   
   ```lamina
   cas::load(name: string) -> cas_object/null
   ```
-  
+
 - **CAS定点计算函数**：在指定变量值处计算CAS对象表示的表达式，返回计算结果（数值类型）。
   
   ```lamina
   cas::evaluate_at(cas_obj: cas_object, var: string, value: number) -> number
   ```
-  
+
 - **CAS线性求解函数**：求解线性方程或线性方程组（需以CAS对象形式传入），返回方程的解（CAS对象或解的集合）。
   
   ```lamina
   cas::solve_linear(cas_obj: cas_object) -> cas_object/array
   ```
-  
+
 - **CAS数值求导函数**：通过数值方法对函数（CAS对象表示）求导，返回数值导数结果（数值类型）。
   
   ```lamina
   cas::numerical_derivative(cas_obj: cas_object, var: string, value: number) -> number
   ```
-  
 
 ### 9.IO函数
 
 1. **阅读文件**：根据指定路径和匹配模式读取文件内容，返回读取到的字符串数据。
-  
-  ```lamina
-  fast_io::read(path, pattern) -> string
-  ```
-  
+   
+   ```lamina
+   fast_io::read(path, pattern) -> string
+   ```
+
 2. **向文件写入**：向指定路径的文件中写入内容（注：需确保函数实际包含内容参数，此处按标准逻辑补充），返回写入成功与否的布尔值。
-  
-  ```lamina
-  fast_io::write(path) -> bool
-  ```
-  
+   
+   ```lamina
+   fast_io::write(path) -> bool
+   ```
+
 3. **创造文件**：在指定路径创建新文件，并写入初始内容，返回创建成功与否的布尔值。
-  
-  ```lamina
-  fast_io::create(path, init_conten) -> bool
-  ```
-  
+   
+   ```lamina
+   fast_io::create(path, init_conten) -> bool
+   ```
 
 ### 10. 程序控制函数
 
 10. 程序控制函数
-
 - **程序退出函数**：终止当前程序运行，可指定退出码（0表示正常退出，非0表示异常）。
   
   ```lamina
   exit(code: int = 0) -> null
   ```
-  
+
 - **类型转换函数**：将任意类型的变量转换为字符串类型，返回转换后的字符串。
   
   ```lamina
   to_string(x) -> string
   ```
-  
+
 - **系统执行函数**：执行系统指令
   
   ```
   system(cmd: string) -> null
   ```
-  
 
 ### 11. 变量与函数查询函数
 
@@ -719,25 +708,24 @@ print("总和：", total); // 输出"总和：150"
   ```lamina
   vars() -> array
   ```
-  
+
 - **局部变量查询函数**：返回当前作用域内所有局部变量的名称列表，结构体类型。
   
   ```lamina
   locals() -> struct
   ```
-  
+
 - **全局变量查询函数**：返回全局作用域变量的名称列表，结构体类型。
   
   ```lamina
   locals() -> struct
   ```
-  
 
 ## 开发中的库及类成员说明
 
 ### List类
 
-**文件位置**：`interpreter/list.hpp`
+**文件位置**：`interpreter/lamina_api/list.hpp`
 
 **类说明**：继承了base_list<Value>
 
@@ -745,7 +733,7 @@ print("总和：", total); // 输出"总和：150"
 
 ### base_list类
 
-**文件位置**：`interpreter/base_list.hpp`
+**文件位置**：`interpreter/lamina_api/base_list.hpp`
 
 **类说明**：一个单项链表模板类，在命名空间__LAMINA::ListType下
 
