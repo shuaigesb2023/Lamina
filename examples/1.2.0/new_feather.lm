@@ -37,7 +37,9 @@ struct Student{name = "Tom";age = 18;}
 
 print(Student);
 
-// 取值语句
+// 设置子项
+Student.name = "Lucy"
+// 获取子项
 print(Student.name);
 
 struct Dog { name = "",  init = do|n|{self.name = n},   bark = do{ print(self.name, "is barking") } }
