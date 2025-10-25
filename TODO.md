@@ -103,9 +103,9 @@
 
      无具体引用，欢迎后人补充，文件位置
 
-     底层模板类：`interpreter/base_list.hpp`
+     底层模板类：`interpreter/lamina_api/base_list.hpp`
 
-     继承套用：`interpreter/list.hpp`
+     继承套用：`interpreter/lamina_api/list.hpp`
 
 ## 其他
 - [ ] ⚠️ 添加检查循环导入的功能（未完成）<br>
