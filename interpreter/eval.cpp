@@ -5,7 +5,6 @@
 #include "lamina_api/symbolic.hpp"
 #include <optional>
 #include <iostream>
-#include <stdint.h>
 
 enum VALUE_TYPE : int {
     VALUE_IS_STRING = 1,
