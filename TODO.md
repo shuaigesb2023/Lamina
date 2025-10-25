@@ -75,7 +75,7 @@
 - [ ] ⚠️ LmInt（未完成）<br>
      备注：
 
-     优化现在Bigint效率，
+     优化现在Bigint效率(LmBigNum库在做了)，
 
      把Bigint改名为LmInt, 
 
@@ -111,6 +111,8 @@
      继承套用：`interpreter/list.hpp`
 
 ## 其他
+- [ ] ⚠️ 添加检查循环导入的功能（未完成）<br>
+
 - [ ] ⚠️ 测试新的c++ module loader（未完成）<br>
      备注：
 
