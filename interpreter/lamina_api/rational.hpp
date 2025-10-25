@@ -185,7 +185,7 @@ private:
                     }
                 }
                 if (ok) {//如果保持循环返回
-                    return {i1, i2 - 1};
+                    return {i1 + 1, i2 - 1};
                 }
             }
             h2[n[i]]++;
