@@ -185,7 +185,7 @@ private:
                     }
                 }
                 if (ok) {//如果保持循环返回
-                    return {i1 + 1, i2 - 1};
+                    return {i1 - 1, i2 - 1};
                 }
             }
             h2[n[i]]++;
@@ -252,6 +252,26 @@ public:
             return numerator.to_string();
         }
         return numerator.to_string() + "/" + denominator.to_string();
+    }
+
+    //转换成小数字符串，n为保留几位小数（负数则忽略整数位）
+    inline std::string to_float_string(int64_t n) {
+        if (n == 0) return (numerator / denominator).to_string();
+        if (n > 0) {
+            BigInt pow10n(10);
+            pow10n = pow10n.power(BigInt(n));
+            std::string re = (numerator * pow10n / denominator).to_string();
+            re.insert(re.end() - n,'.');
+            while (re.back() == '0') re.pop_back();//去除末尾的0
+            if (re.back() == '.') re.pop_back();//如果为小数点也排除
+            return re;
+        } else {
+            BigInt pow10n(10);
+            pow10n = pow10n.power(BigInt(n).abs());
+            std::string re = (numerator / (denominator * pow10n)).to_string();
+            for (; n < 0; n++) re.push_back('0');
+            return re;
+        }
     }
 
     //向下舍入，n为保留几位小数（负数则忽略整数位）
