@@ -174,7 +174,7 @@ std::vector<Token> Lexer::tokenize(const std::string& src) {
                     j = e_pos;
                 }
             }//小数末尾.提取（循环小数支持）
-            else if (j < src.size() && src[j] == '.') {
+            else if (isdigit(src[j - 1]) && j < src.size() && src[j] == '.') {
                 while (j < src.size() && src[j] == '.') j++;
             }
 
