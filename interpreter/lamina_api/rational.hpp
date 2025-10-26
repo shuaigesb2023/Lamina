@@ -4,6 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <map>
 #include <stdint.h>
 
 class Rational {
@@ -252,6 +253,37 @@ public:
             return numerator.to_string();
         }
         return numerator.to_string() + "/" + denominator.to_string();
+    }
+
+    //转换成小数字符串，如果为循环小数循环节用括号圈出并在末尾添加...
+    inline std::string to_float_string() {
+        if (numerator % denominator == BigInt(0)) return (numerator / denominator).to_string();
+        std::string re;
+        const BigInt ten(10);
+        const BigInt zero(0);
+        if ((numerator < zero) ^ (denominator < zero)) re += '-';
+        BigInt num = numerator.abs(), den = denominator.abs();
+        re += (num / den).to_string();//先记录整数部分
+        num %= den;
+        re += '.';
+
+        std::map<BigInt, size_t> num_index;
+
+        while (num != zero and num_index.find(num) == num_index.end()) {
+            num_index[num] = re.size();
+            re += '0';
+            num *= ten;
+            while (num >= den) {
+                num -= den;
+                re.back()++;
+            }
+        }
+        if (num_index.find(num) != num_index.end()) {//有循环节
+            re.insert(re.begin() + num_index[num], '(');
+            re += ")...";
+        }
+        return re;
+
     }
 
     //转换成小数字符串，n为保留几位小数（负数则忽略整数位）
