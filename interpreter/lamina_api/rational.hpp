@@ -255,7 +255,7 @@ public:
     }
 
     //转换成小数字符串，n为保留几位小数（负数则忽略整数位）
-    inline std::string to_float_string(int64_t n) {
+    inline std::string to_float_string(int64_t n) const{
         if (n == 0) return (numerator / denominator).to_string();
         if (n > 0) {
             BigInt pow10n(10);
@@ -315,7 +315,7 @@ public:
         floor(n);
     }
 
-    inline Rational sqrt(int64_t n) {
+    inline Rational sqrt(int64_t n) const{
         Rational re = *this;
         re.sqrt_self(n);
         return re;
@@ -331,7 +331,7 @@ public:
 
     // 转换为 double（近似值）
     double to_double() const {
-        return static_cast<double>(numerator.to_int()) / static_cast<double>(denominator.to_int());
+        return std::stod(to_float_string(15));
     }
 
     // 加法
