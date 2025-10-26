@@ -64,10 +64,12 @@ public:
     }
 
     Rational(const std::string& num):Rational() {
+        if (num.empty() or num == "0") return;
         BigInt &up = numerator, &down = denominator;
         BigInt bigint0to10[11];
         for (int i = 0; i < 11; i++) bigint0to10[i] = BigInt(i);
         uint64_t i = 0;
+        if (num[i] == '-') i++;
         while (i < num.size() and num[i] != '.' and num[i] != 'e' and num[i] != 'E') {//处理整数部分
             up *= bigint0to10[10];
             up += bigint0to10[num[i] - '0'];
@@ -137,6 +139,8 @@ public:
                 up *= bigint0to10[10].power(BigInt(std::string(num.begin() + i, num.end())));
             }
         }
+
+        if (num[0] == '-') up = BigInt(0) - up;
 
         simplify();
     }
