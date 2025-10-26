@@ -255,17 +255,17 @@ public:
     }
 
     //向下舍入，n为保留几位小数（负数则忽略整数位）
-    inline void floor(const BigInt& n) {
-        if (n == BigInt(0)) return;
-        if (n > BigInt(0)) {
+    inline void floor(int64_t n) {
+        if (n == 0) return;
+        if (n > 0) {
             BigInt pow10n(10);
-            pow10n = pow10n.power(n);
+            pow10n = pow10n.power(BigInt(n));
             numerator *= pow10n;
             numerator /= denominator;
             denominator = pow10n;
         } else {
             BigInt pow10n(10);
-            pow10n = pow10n.power(n.abs());
+            pow10n = pow10n.power(BigInt(n).abs());
             denominator *= pow10n;
             numerator /= denominator;
             numerator *= pow10n;
@@ -275,16 +275,16 @@ public:
     }
 
     //将自己开根，n为保留几位小数（负数则忽略整数位）
-    inline void sqrt_self(const BigInt& n) {
+    inline void sqrt_self(int64_t n) {
         if (numerator < BigInt(0)) throw std::runtime_error("Sqrt negative number");
         Rational t(numerator * denominator);
         
         //求解t的根，二分法
-        BigInt ci = BigInt(t.numerator.digits.size() * 2+3) + n;
-        const BigInt one(1);
-        const BigInt nadd1(n + BigInt(1));
-        Rational ans(t / 2);
-        for (; !ci.is_zero(); ci -= one) {
+        int64_t ci = n + t.numerator.digits.size() * 1.8;
+        const int64_t nadd1 = n + 1;
+        Rational ans( (t * t + Rational(6) * t + Rational(1))  /  (Rational(4) * (t + Rational(1))) );
+        //使用牛顿法寻找快速寻找近似值
+        for (; ci >= 0; ci--) {
             ans = (ans + t / ans) / 2;
             ans.floor(nadd1);
         }
@@ -293,7 +293,7 @@ public:
         floor(n);
     }
 
-    inline Rational sqrt(const BigInt& n) {
+    inline Rational sqrt(int64_t n) {
         Rational re = *this;
         re.sqrt_self(n);
         return re;
