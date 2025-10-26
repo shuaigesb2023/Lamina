@@ -261,6 +261,7 @@ public:
             BigInt pow10n(10);
             pow10n = pow10n.power(BigInt(n));
             std::string re = (numerator * pow10n / denominator).to_string();
+            if (n == re.size()) re.insert(re.end() - n, '0');//如果没有个位添加为0
             re.insert(re.end() - n,'.');
             while (re.back() == '0') re.pop_back();//去除末尾的0
             if (re.back() == '.') re.pop_back();//如果为小数点也排除
@@ -269,6 +270,7 @@ public:
             BigInt pow10n(10);
             pow10n = pow10n.power(BigInt(n).abs());
             std::string re = (numerator / (denominator * pow10n)).to_string();
+            if (re.size() == 1 and re[0] == '0') return re;
             for (; n < 0; n++) re.push_back('0');
             return re;
         }
