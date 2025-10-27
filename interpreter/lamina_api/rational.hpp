@@ -1,5 +1,5 @@
 #pragma once
-#include "BigInt.hpp"
+#include "bigint.hpp"
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
