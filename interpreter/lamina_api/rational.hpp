@@ -311,7 +311,14 @@ public:
     }
 
     //向下舍入，n为保留几位小数（负数则忽略整数位）
-    inline void floor(int64_t n) {
+    inline void floor(const int64_t& n) {
+        floor_without_sim(n);
+        simplify();
+    }
+
+private:
+
+    inline void floor_without_sim(const int64_t& n) {
         if (n == 0) return;
         if (n > 0) {
             BigInt pow10n(10);
@@ -327,8 +334,9 @@ public:
             numerator *= pow10n;
             denominator = BigInt(1);
         }
-        simplify();
     }
+
+public:
 
     //将自己开根，n为保留几位小数（负数则忽略整数位）
     inline void sqrt_self(int64_t n) {
@@ -337,15 +345,14 @@ public:
         
         //求解t的根，二分法
         const int64_t nadd1 = n + 1;
-        BigInt pow10n(10);
-        pow10n = pow10n.power(BigInt(n));
+        const BigInt ten(10);
         Rational ans( (t * t + Rational(6) * t + Rational(1))  /  (Rational(4) * (t + Rational(1))) );//使用牛顿法寻找快速寻找近似值
         Rational temp;
-        while ((temp.numerator * pow10n / temp.denominator) != (ans.numerator * pow10n / ans.denominator)) {
+        while (temp.numerator / ten != ans.numerator / ten) {
             temp = (ans + t / ans) / 2;
-            temp.floor(nadd1);
+            temp.floor_without_sim(nadd1);
             ans = (temp + t / temp) / 2;
-            ans.floor(nadd1);
+            ans.floor_without_sim(nadd1);
         }
         numerator = ans.numerator;
         denominator *= ans.denominator;
@@ -365,16 +372,15 @@ public:
 
         const int64_t nadd1 = n + 1;
         const Rational rat_radical(radical);
-        BigInt pow10n(10);
-        pow10n = pow10n.power(BigInt(n));
+        const BigInt ten(10);
         Rational ans(Rational(t.numerator,radical) * (Rational(radical - BigInt(1)) + Rational(t.numerator, t.numerator.power(radical))));//使用牛顿法寻找快速寻找近似值
         //推到逼近公式：ans = ans/radical * ( (radical-1) + (t / ans^radical) )
         Rational temp;
-        while ((temp.numerator * pow10n / temp.denominator) != (ans.numerator * pow10n / ans.denominator)) {
+        while (temp.numerator / ten != ans.numerator / ten) {
             temp = ans / rat_radical * ((rat_radical - Rational(1)) + (t / ans.power(radical)));
-            temp.floor(nadd1);
+            temp.floor_without_sim(nadd1);
             ans = temp / rat_radical * ((rat_radical - Rational(1)) + (t / temp.power(radical)));
-            ans.floor(nadd1);
+            ans.floor_without_sim(nadd1);
         }
 
         numerator = ans.numerator;
