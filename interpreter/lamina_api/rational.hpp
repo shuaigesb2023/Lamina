@@ -338,6 +338,33 @@ private:
 
 public:
 
+    //获取pi的值，n为保留几位小数
+    inline Rational get_pi(int64_t n) const {
+        int64_t nadd5 = n + 5;
+        int64_t ndiv7ad1 = n / 7 + 1;
+        const Rational sqrt8 = Rational(8).sqrt(nadd5);
+        const BigInt bigint1103(1103);
+        const BigInt bigint26390(26390);
+        const BigInt bigint396(396);
+        const BigInt bigint4(4);
+        Rational t;
+        BigInt upt, downt;
+        for (int64_t i = 0; i < ndiv7ad1; i++) {
+            upt = BigInt::factorial(BigInt(i * 4)) * (bigint1103 + bigint26390 * BigInt(i));
+            downt = BigInt::factorial(BigInt(i)).power(bigint4) * bigint396.power(BigInt(i * 4));
+            t = t + Rational(upt, downt);
+            t.floor(nadd5);
+        }
+        t = t * sqrt8 * Rational(1,9801);
+        
+        upt = t.denominator;
+        t.denominator = t.numerator;
+        t.numerator = upt;
+        t.floor(n);
+
+        return t;
+    }
+
     //将自己开根，n为保留几位小数（负数则忽略整数位）
     inline void sqrt_self(int64_t n) {
         if (numerator < BigInt(0)) throw std::runtime_error("Sqrt negative number");
@@ -373,13 +400,14 @@ public:
         const int64_t nadd1 = n + 1;
         const Rational rat_radical(radical);
         const BigInt ten(10);
+        const Rational radical_sub1 = rat_radical - Rational(1);
         Rational ans(Rational(t.numerator,radical) * (Rational(radical - BigInt(1)) + Rational(t.numerator, t.numerator.power(radical))));//使用牛顿法寻找快速寻找近似值
         //推到逼近公式：ans = ans/radical * ( (radical-1) + (t / ans^radical) )
         Rational temp;
         while (temp.numerator / ten != ans.numerator / ten) {
-            temp = ans / rat_radical * ((rat_radical - Rational(1)) + (t / ans.power(radical)));
+            temp = ans / rat_radical * (radical_sub1 + (t / ans.power(radical)));
             temp.floor_without_sim(nadd1);
-            ans = temp / rat_radical * ((rat_radical - Rational(1)) + (t / temp.power(radical)));
+            ans = temp / rat_radical * (radical_sub1 + (t / temp.power(radical)));
             ans.floor_without_sim(nadd1);
         }
 
